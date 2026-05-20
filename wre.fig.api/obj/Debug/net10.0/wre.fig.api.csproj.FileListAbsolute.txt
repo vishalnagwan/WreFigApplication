@@ -170,3 +170,4 @@ D:\Wind River\WRE FIG Application\wre.fig.api\obj\Debug\net10.0\refint\wre.fig.a
 D:\Wind River\WRE FIG Application\wre.fig.api\obj\Debug\net10.0\wre.fig.api.pdb
 D:\Wind River\WRE FIG Application\wre.fig.api\obj\Debug\net10.0\wre.fig.api.genruntimeconfig.cache
 D:\Wind River\WRE FIG Application\wre.fig.api\obj\Debug\net10.0\ref\wre.fig.api.dll
+D:\Wind River\WRE FIG Application\wre.fig.api\obj\Debug\net10.0\wre.fig.api.sourcelink.json

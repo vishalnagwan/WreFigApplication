@@ -43,8 +43,8 @@ const NOTE_ROLES  = [ROLES.Admin, ROLES.FieldSupervisor, ROLES.DispatchSuperviso
   <div class="branch-header-right">
     <div class="month-nav-btns">
       <button class="btn-icon month-nav-arrow" (click)="prevMonth()">‹</button>
-      <button class="month-nav-pill" [class.active]="isCurrentMonth" (click)="goThisMonth()">This Month</button>
-      <button class="month-nav-pill" [class.active]="isNextMonth"    (click)="goNextMonth()" [disabled]="isMaxMonth">Next Month</button>
+      <button class="month-nav-pill active">{{thisMonthLabel}}</button>
+      <button class="month-nav-pill" (click)="nextMonth()" [disabled]="isMaxMonth">{{nextMonthLabel}}</button>
       <button class="btn-icon month-nav-arrow" (click)="nextMonth()" [disabled]="isMaxMonth">›</button>
     </div>
   </div>
@@ -73,7 +73,7 @@ const NOTE_ROLES  = [ROLES.Admin, ROLES.FieldSupervisor, ROLES.DispatchSuperviso
     [class.active]="paintMode === sc.code"
     (click)="setPaintMode(sc.code)">
   </app-shift-chip>
-  <button class="btn-ghost btn-sm" (click)="clearPaintMode()">Clear</button>
+  <button class="btn-ghost btn-sm" [class.active]="paintMode === 'clear'" (click)="setPaintMode('clear')">Clear</button>
   <span *ngIf="selectedRows.size > 0" style="font-size:.78rem;color:var(--ink-light);">
     {{selectedRows.size}} row(s) selected
   </span>
@@ -88,8 +88,12 @@ const NOTE_ROLES  = [ROLES.Admin, ROLES.FieldSupervisor, ROLES.DispatchSuperviso
     <thead>
       <tr>
         <th class="cb-col" *ngIf="canEdit"></th>
-        <th class="emp-col">Employee</th>
+        <th class="emp-col">Technician</th>
         <th class="shift-col">Shift</th>
+        <th class="jobtitle-col">Job Title</th>
+        <th class="resource-col">Resource Type</th>
+        <th class="manager-col">Manager</th>
+        <th class="mobile-col">Mobile</th>
         <th *ngFor="let d of grid.days" [class.weekend]="d.isWeekend">
           <div class="day-hdr">
             <span class="day-abbr">{{d.dayAbbr | titlecase}}</span>
@@ -106,8 +110,18 @@ const NOTE_ROLES  = [ROLES.Admin, ROLES.FieldSupervisor, ROLES.DispatchSuperviso
                  [checked]="selectedRows.has(row.employeeId)"
                  (change)="toggleRowSelect(row.employeeId)" />
         </td>
-        <td class="emp-col" style="padding-left:.5rem;font-size:.8rem;">{{row.name}}</td>
-        <td class="shift-col" style="font-size:.75rem;color:var(--ink-light);">{{row.defaultShift}}</td>
+        <td class="emp-col" style="padding-left:.5rem;font-size:.8rem;font-weight:600;">{{row.name}}</td>
+        <td class="shift-col">
+          <span class="shift-badge"
+                [class.am]="row.defaultShift.toUpperCase() === 'AM'"
+                [class.pm]="row.defaultShift.toUpperCase() === 'PM'">
+            {{row.defaultShift || '—'}}
+          </span>
+        </td>
+        <td class="jobtitle-col" style="font-size:.75rem;color:var(--ink-light);padding-left:.5rem;">{{row.jobTitle || '—'}}</td>
+        <td class="resource-col" style="font-size:.75rem;color:var(--ink-light);padding-left:.5rem;">{{resourceDisplay(row.resourceCategory)}}</td>
+        <td class="manager-col" style="font-size:.75rem;color:var(--ink-light);padding-left:.5rem;">{{row.managerName || '—'}}</td>
+        <td class="mobile-col" style="font-size:.75rem;color:var(--ink-light);padding-left:.5rem;">{{row.workMobilePhone || '—'}}</td>
         <td *ngFor="let d of grid.days"
             [class.weekend]="d.isWeekend"
             [class.paint-cursor]="paintMode !== null"
@@ -231,6 +245,24 @@ export class ScheduleComponent implements OnInit, OnDestroy {
     return `${months[this.month - 1]} ${this.year}`;
   }
 
+  get thisMonthLabel(): string {
+    const months = [
+      'January','February','March','April','May','June',
+      'July','August','September','October','November','December'
+    ];
+    return `${months[this.month - 1]} ${String(this.year).slice(2)}`;
+  }
+
+  get nextMonthLabel(): string {
+    const months = [
+      'January','February','March','April','May','June',
+      'July','August','September','October','November','December'
+    ];
+    const nm = this.month === 12 ? 1 : this.month + 1;
+    const ny = this.month === 12 ? this.year + 1 : this.year;
+    return `${months[nm - 1]} ${String(ny).slice(2)}`;
+  }
+
   /** Fill rate computed from live grid data (includes default pre-filled cells, not just DB entries). */
   get computedFillRate(): number {
     if (!this.grid || this.grid.rows.length === 0) return 0;
@@ -277,6 +309,14 @@ export class ScheduleComponent implements OnInit, OnDestroy {
 
   get legendCodes(): StatusCodeDto[] {
     return this.statusCodes.filter(s => s.showInPicker);
+  }
+
+  resourceDisplay(raw: string | null | undefined): string {
+    if (!raw) return '—';
+    const filtered = raw.split(',').map(s => s.trim())
+      .filter(s => s.length > 0 && s.toLowerCase() !== 'technician')
+      .join(', ');
+    return filtered || '—';
   }
 
   ngOnInit(): void {
@@ -349,11 +389,12 @@ export class ScheduleComponent implements OnInit, OnDestroy {
         if (!targetRow.cells[day]) {
           targetRow.cells[day] = { statusCode: '—', hasNote: false, isNew: true };
         }
-        targetRow.cells[day].statusCode = this.paintMode!;
+        const codeToApply = this.paintMode === 'clear' ? '—' : this.paintMode!;
+        targetRow.cells[day].statusCode = codeToApply;
         this.scheduleSvc.upsertCell({
           employeeId: empId,
           date:       dateStr,
-          statusCode: this.paintMode!
+          statusCode: codeToApply
         }).subscribe();
         const key = `${empId}-${day}`;
         this.justPainted.add(key);

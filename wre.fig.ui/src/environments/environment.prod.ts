@@ -1,5 +1,5 @@
 export const environment = {
   production: true,
-  apiUrl:     'https://your-api.azurewebsites.net/api',
-  hubUrl:     'https://your-api.azurewebsites.net/hubs/fig'
+  apiUrl:     'https://WreFigAPIService.azurewebsites.net/api',
+  hubUrl:     'https://WreFigAPIService.azurewebsites.net/hubs/fig'
 };

@@ -1,0 +1,80 @@
+# ──────────────────────────────────────────────────────────────────────────────
+# WRE FIG Application — Production Deployment
+# Triggers on every push to main.
+# Job 1 → builds .NET 10 API  → Azure App Service  (WreFigAPIService)
+# Job 2 → builds Angular SPA  → Azure Static Web Apps (WreFigApp)
+# ──────────────────────────────────────────────────────────────────────────────
+
+name: Deploy WRE FIG Application
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:   # allow manual trigger from GitHub Actions UI
+
+jobs:
+
+  # ── Job 1: .NET 10 API ────────────────────────────────────────────────────
+  deploy-api:
+    name: Build & Deploy API → WreFigAPIService
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.x'
+
+      - name: Restore dependencies
+        run: dotnet restore wre.fig.api/wre.fig.api.csproj
+
+      - name: Build (Release)
+        run: dotnet build wre.fig.api/wre.fig.api.csproj --configuration Release --no-restore
+
+      - name: Publish
+        run: dotnet publish wre.fig.api/wre.fig.api.csproj --configuration Release --no-build --output ./api-publish
+
+      - name: Deploy to Azure App Service
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: 'WreFigAPIService'
+          slot-name: 'Production'
+          package: ./api-publish
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE }}
+
+  # ── Job 2: Angular SPA ───────────────────────────────────────────────────
+  deploy-ui:
+    name: Build & Deploy UI → WreFigApp
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: wre.fig.ui/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+        working-directory: wre.fig.ui
+
+      - name: Build Angular (production)
+        run: npm run build -- --configuration production
+        working-directory: wre.fig.ui
+
+      - name: Deploy to Azure Static Web Apps
+        uses: Azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          action: 'upload'
+          app_location: 'wre.fig.ui'
+          output_location: 'dist/wre.fig.ui/browser'
+          skip_app_build: true

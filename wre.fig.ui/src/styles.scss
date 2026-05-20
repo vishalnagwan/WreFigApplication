@@ -507,9 +507,13 @@ button:disabled { opacity: .45; cursor: not-allowed; }
   top: 0;
   z-index: 10;
 }
-.emp-col  { width: 140px; padding-left: .5rem !important; text-align: left !important; }
-.shift-col { width: 52px; }
-.cb-col   { width: 36px; }
+.emp-col      { width: 100px; padding-left: .5rem !important; text-align: left !important; }
+.jobtitle-col { width: 90px;  padding-left: .5rem !important; text-align: left !important; }
+.resource-col { width: 90px;  padding-left: .5rem !important; text-align: left !important; }
+.manager-col  { width: 85px;  padding-left: .5rem !important; text-align: left !important; }
+.mobile-col   { width: 105px; padding-left: .5rem !important; text-align: left !important; }
+.shift-col    { width: 46px; }
+.cb-col       { width: 32px; }
 .day-hdr  { display: flex; flex-direction: column; align-items: center; gap: 1px; }
 .day-abbr { font-size: .65rem; color: var(--ink-faint); text-transform: uppercase; }
 .day-num  { font-size: .8rem; font-weight: 700; }
@@ -517,7 +521,8 @@ button:disabled { opacity: .45; cursor: not-allowed; }
 .schedule-table td { text-align: center; cursor: default; }
 .schedule-table td.weekend { background: #fafafa; }
 .schedule-table tr:hover td { background: var(--accent-light); }
-.schedule-table tr.selected-row td { background: #ede9fe; }
+.schedule-table tr.selected-row td { background: #ddd6fe !important; }
+.schedule-table tr.selected-row:hover td { background: #c4b5fd !important; }
 .paint-cursor { cursor: pointer !important; }
 
 @keyframes cell-note-pulse {

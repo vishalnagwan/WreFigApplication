@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("wre.fig.api")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+3a376037f9478a8c32763111e1e5327bddaa644d")]
 [assembly: System.Reflection.AssemblyProductAttribute("wre.fig.api")]
 [assembly: System.Reflection.AssemblyTitleAttribute("wre.fig.api")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

@@ -21,14 +21,12 @@ import { ShiftChipComponent }    from '../shift-chip/shift-chip.component';
     <div class="emp-avatar">{{initials}}</div>
     <div style="flex:1;">
       <div style="font-weight:700;font-size:.95rem;">{{row.name}}</div>
-      <div style="font-size:.78rem;color:var(--ink-light);">
-        {{dateLabel}} &nbsp;
-        <app-shift-chip
-          [code]="cell?.statusCode ?? '—'"
-          [statusCodes]="statusCodes">
-        </app-shift-chip>
-      </div>
+      <div style="font-size:.78rem;color:var(--ink-light);">{{dateLabel}}</div>
     </div>
+    <app-shift-chip
+      [code]="cell?.statusCode ?? '—'"
+      [statusCodes]="statusCodes">
+    </app-shift-chip>
     <button class="btn-icon" (click)="close.emit()">✕</button>
   </div>
 
@@ -178,11 +176,12 @@ export class DayDetailPanelComponent implements OnInit {
 
   get resourceTypeDisplay(): string {
     if (!this.row?.resourceCategory) return '—';
-    return this.row.resourceCategory
+    const filtered = this.row.resourceCategory
       .split(',')
       .map(s => s.trim())
-      .filter(s => s.length > 0)
-      .join(', ') || '—';
+      .filter(s => s.length > 0 && s.toLowerCase() !== 'technician')
+      .join(', ');
+    return filtered || '—';
   }
 
   private static readonly ACTION_LABELS: Record<string, string> = {

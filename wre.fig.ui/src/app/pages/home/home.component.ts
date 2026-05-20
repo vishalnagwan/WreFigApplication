@@ -21,19 +21,18 @@ interface RegionGroup {
 <div class="home-header">
   <div class="home-header-top">
     <h1 class="home-title">{{dashboardTitle}}</h1>
-    <div class="home-search-wrap">
-      <input type="text" class="home-search-input" placeholder="Search branches..."
-             [(ngModel)]="searchText" (ngModelChange)="applyFilter()" />
-      <button class="btn-icon home-refresh-btn" (click)="load()" title="Refresh">↺</button>
-    </div>
-  </div>
-  <div class="home-month-row">
-    <span class="home-month-label">MONTH:</span>
-    <div class="month-nav-btns">
-      <button class="btn-icon month-nav-arrow" (click)="prevMonth()">‹</button>
-      <button class="month-nav-pill" [class.active]="isCurrentMonth" (click)="goThisMonth()">This Month</button>
-      <button class="month-nav-pill" [class.active]="isNextMonth"    (click)="goNextMonth()" [disabled]="isMaxMonth">Next Month</button>
-      <button class="btn-icon month-nav-arrow" (click)="nextMonth()" [disabled]="isMaxMonth">›</button>
+    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:.4rem;">
+      <div class="home-search-wrap">
+        <input type="text" class="home-search-input" placeholder="Search branches..."
+               [(ngModel)]="searchText" (ngModelChange)="applyFilter()" />
+        <button class="btn-icon home-refresh-btn" (click)="load()" title="Refresh">↺</button>
+      </div>
+      <div class="month-nav-btns">
+        <button class="btn-icon month-nav-arrow" (click)="prevMonth()">‹</button>
+        <button class="month-nav-pill active">{{thisMonthLabel}}</button>
+        <button class="month-nav-pill" (click)="nextMonth()" [disabled]="isMaxMonth">{{nextMonthLabel}}</button>
+        <button class="btn-icon month-nav-arrow" (click)="nextMonth()" [disabled]="isMaxMonth">›</button>
+      </div>
     </div>
   </div>
 </div>
@@ -126,6 +125,24 @@ export class HomeComponent implements OnInit {
       'July','August','September','October','November','December'
     ];
     return `${months[this.month - 1]} ${this.year}`;
+  }
+
+  get thisMonthLabel(): string {
+    const months = [
+      'January','February','March','April','May','June',
+      'July','August','September','October','November','December'
+    ];
+    return `${months[this.month - 1]} ${String(this.year).slice(2)}`;
+  }
+
+  get nextMonthLabel(): string {
+    const months = [
+      'January','February','March','April','May','June',
+      'July','August','September','October','November','December'
+    ];
+    const nm = this.month === 12 ? 1 : this.month + 1;
+    const ny = this.month === 12 ? this.year + 1 : this.year;
+    return `${months[nm - 1]} ${String(ny).slice(2)}`;
   }
 
   get dashboardTitle(): string {
