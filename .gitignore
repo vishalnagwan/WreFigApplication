@@ -1,0 +1,33 @@
+# ── .NET ──────────────────────────────────────────────────────────────────────
+bin/
+obj/
+*.user
+*.suo
+.vs/
+*.log
+*.nupkg
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+# ── ASP.NET ───────────────────────────────────────────────────────────────────
+wwwroot/lib/
+appsettings.Development.json
+
+# ── Node / Angular ────────────────────────────────────────────────────────────
+node_modules/
+dist/
+.angular/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ── Generated / temp ──────────────────────────────────────────────────────────
+migrations.sql
+*.PublishSettings
+*.pubxml
+*.pubxml.user
+
+# ── OS ────────────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
