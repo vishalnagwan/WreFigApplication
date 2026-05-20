@@ -162,8 +162,10 @@ else
     app.UseHsts();
 }
 
-if (!app.Environment.IsDevelopment())
-    app.UseHttpsRedirection();
+// Note: Azure App Service terminates HTTPS at the proxy level and forwards HTTP
+// internally. UseHttpsRedirection would redirect CORS preflight (OPTIONS) requests,
+// which browsers do not follow — killing all cross-origin API calls.
+// Azure already enforces HTTPS at the infrastructure level, so no redirect needed here.
 
 // CORS must come before exception handler so error responses also carry CORS headers
 app.UseCors("FigPolicy");
