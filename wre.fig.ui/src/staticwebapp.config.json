@@ -3,15 +3,11 @@
     {
       "route": "/api/*",
       "allowedRoles": [ "anonymous" ]
-    },
-    {
-      "route": "/*",
-      "rewrite": "/index.html"
     }
   ],
   "navigationFallback": {
     "rewrite": "/index.html",
-    "exclude": [ "/assets/*", "*.css", "*.js", "*.ico", "*.png", "*.svg" ]
+    "exclude": [ "/assets/*", "*.css", "*.js", "*.ico", "*.png", "*.svg", "*.woff", "*.woff2", "*.ttf" ]
   },
   "globalHeaders": {
     "Cache-Control": "no-store"
