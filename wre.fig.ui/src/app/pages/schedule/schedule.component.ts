@@ -56,7 +56,7 @@ const NOTE_ROLES  = [ROLES.Admin, ROLES.FieldSupervisor, ROLES.DispatchSuperviso
   <span class="instr-chip"
         [class.active]="leadershipExpanded"
         (click)="leadershipExpanded = !leadershipExpanded">
-    Leadership
+    LEADERSHIP
     <span class="instr-badge">{{leaders.length}}</span>
   </span>
 </div>
@@ -451,12 +451,16 @@ export class ScheduleComponent implements OnInit, OnDestroy {
 
   formatPhone(phone: string | undefined | null): string {
     if (!phone) return '—';
-    const digits = phone.replace(/\D/g, '');
+    // Split off any extension (e.g. "Ext 116", "ext. 5", "x123")
+    const extMatch = phone.match(/\s*(ext\.?|x)\s*(\d+)$/i);
+    const extSuffix = extMatch ? ` Ext ${extMatch[2]}` : '';
+    const base      = extMatch ? phone.slice(0, phone.indexOf(extMatch[0])) : phone;
+    const digits    = base.replace(/\D/g, '');
     if (digits.length === 11 && digits[0] === '1')
-      return `(${digits.slice(1,4)})-${digits.slice(4,7)}-${digits.slice(7)}`;
+      return `(${digits.slice(1,4)})-${digits.slice(4,7)}-${digits.slice(7)}${extSuffix}`;
     if (digits.length === 10)
-      return `(${digits.slice(0,3)})-${digits.slice(3,6)}-${digits.slice(6)}`;
-    return phone; // non-standard length — return as-is
+      return `(${digits.slice(0,3)})-${digits.slice(3,6)}-${digits.slice(6)}${extSuffix}`;
+    return phone; // non-standard — return as-is
   }
 
   openLeaderEditor(leader?: BranchLeader): void {
