@@ -92,7 +92,7 @@ html, body {
     transform: translateX(-50%);
     pointer-events: none;
     white-space: nowrap;
-    @media (max-width: 1200px) { display: none; }
+    @media (max-width: 1500px) { display: none; }
   }
   .app-title { font-size: 1rem; font-weight: 700; letter-spacing: .25px; color: var(--ink); }
   .topbar-right { display: flex; align-items: center; gap: .75rem; flex-shrink: 0; margin-left: auto; }
