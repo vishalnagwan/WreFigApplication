@@ -48,7 +48,7 @@ import { ShiftChipComponent }    from '../shift-chip/shift-chip.component';
           </div>
           <div class="info-item">
             <div class="info-label">Truck</div>
-            <div>{{row.truckAssignment || '—'}}</div>
+            <div>{{formatTruck(row.truckAssignment)}}</div>
           </div>
           <div class="info-item">
             <div class="info-label">Truck ID</div>
@@ -172,6 +172,12 @@ export class DayDetailPanelComponent implements OnInit {
 
   get visibleHistory(): AlertDto[] {
     return this.history.filter(h => h.action?.trim() || h.description?.trim());
+  }
+
+  formatTruck(value: string | undefined | null): string {
+    if (!value) return '—';
+    // Uppercase trailing 'g' used as gallon unit (e.g. "4,800g" → "4,800G")
+    return value.replace(/g$/i, 'G');
   }
 
   get resourceTypeDisplay(): string {
