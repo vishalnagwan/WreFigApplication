@@ -52,10 +52,9 @@ const NOTE_ROLES  = [ROLES.Admin, ROLES.FieldSupervisor, ROLES.DispatchSuperviso
 </div>
 
 <!-- Leadership Information -->
-<div class="leadership-section" *ngIf="leaders.length > 0 || isAdmin">
+<div class="leadership-section" *ngIf="leaders.length > 0">
   <div class="leadership-section-header">
     <span>LEADERSHIP INFORMATION</span>
-    <button *ngIf="isAdmin" class="btn-ghost btn-sm" (click)="openLeaderEditor()">+ Add / Edit</button>
   </div>
   <table class="leadership-table">
     <thead>
@@ -66,7 +65,6 @@ const NOTE_ROLES  = [ROLES.Admin, ROLES.FieldSupervisor, ROLES.DispatchSuperviso
         <th>Alt Phone</th>
         <th>Manager</th>
         <th>Notes</th>
-        <th *ngIf="isAdmin"></th>
       </tr>
     </thead>
     <tbody>
@@ -77,10 +75,6 @@ const NOTE_ROLES  = [ROLES.Admin, ROLES.FieldSupervisor, ROLES.DispatchSuperviso
         <td class="ldr-info">{{ldr.altPhone || '—'}}</td>
         <td class="ldr-info">{{ldr.managerName || '—'}}</td>
         <td class="ldr-info ldr-notes">{{ldr.notes || '—'}}</td>
-        <td *ngIf="isAdmin" style="text-align:center;">
-          <button class="btn-icon" (click)="editLeader(ldr)" title="Edit">✎</button>
-          <button class="btn-icon" (click)="deleteLeader(ldr.id)" title="Remove" style="color:#e53e3e;">✕</button>
-        </td>
       </tr>
       <tr *ngIf="leaders.length === 0">
         <td colspan="7" style="text-align:center;color:var(--ink-faint);font-size:.8rem;padding:.5rem;">
