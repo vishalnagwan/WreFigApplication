@@ -17,6 +17,7 @@ import { DayDetailPanelComponent }        from '../../shared/day-detail-panel/da
 import { BranchInstructionsComponent }    from '../../shared/branch-instructions/branch-instructions.component';
 import { BranchInstructionEditorComponent } from '../../shared/branch-instruction-editor/branch-instruction-editor.component';
 import { ROLES }                          from '../../../constants';
+import { BranchLeaderService, BranchLeader, UpsertBranchLeader } from '../../services/branch-leader.service';
 
 const WRITE_ROLES = [ROLES.Admin, ROLES.FieldSupervisor, ROLES.DispatchSupervisor, ROLES.Planner, ROLES.Dispatcher];
 const NOTE_ROLES  = [ROLES.Admin, ROLES.FieldSupervisor, ROLES.DispatchSupervisor, ROLES.Planner, ROLES.Dispatcher];
@@ -47,6 +48,85 @@ const NOTE_ROLES  = [ROLES.Admin, ROLES.FieldSupervisor, ROLES.DispatchSuperviso
       <button class="month-nav-pill" (click)="nextMonth()" [disabled]="isMaxMonth">{{nextMonthLabel}}</button>
       <button class="btn-icon month-nav-arrow" (click)="nextMonth()" [disabled]="isMaxMonth">›</button>
     </div>
+  </div>
+</div>
+
+<!-- Leadership Information -->
+<div class="leadership-section" *ngIf="leaders.length > 0 || isAdmin">
+  <div class="leadership-section-header">
+    <span>LEADERSHIP INFORMATION</span>
+    <button *ngIf="isAdmin" class="btn-ghost btn-sm" (click)="openLeaderEditor()">+ Add / Edit</button>
+  </div>
+  <table class="leadership-table">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Job Title</th>
+        <th>Mobile</th>
+        <th>Alt Phone</th>
+        <th>Manager</th>
+        <th>Notes</th>
+        <th *ngIf="isAdmin"></th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let ldr of leaders">
+        <td class="ldr-name">{{ldr.name}}</td>
+        <td class="ldr-info">{{ldr.jobTitle || '—'}}</td>
+        <td class="ldr-info">{{ldr.workMobilePhone || '—'}}</td>
+        <td class="ldr-info">{{ldr.altPhone || '—'}}</td>
+        <td class="ldr-info">{{ldr.managerName || '—'}}</td>
+        <td class="ldr-info ldr-notes">{{ldr.notes || '—'}}</td>
+        <td *ngIf="isAdmin" style="text-align:center;">
+          <button class="btn-icon" (click)="editLeader(ldr)" title="Edit">✎</button>
+          <button class="btn-icon" (click)="deleteLeader(ldr.id)" title="Remove" style="color:#e53e3e;">✕</button>
+        </td>
+      </tr>
+      <tr *ngIf="leaders.length === 0">
+        <td colspan="7" style="text-align:center;color:var(--ink-faint);font-size:.8rem;padding:.5rem;">
+          No leadership information configured for this branch.
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- Leader editor modal -->
+<div class="modal-backdrop" *ngIf="leaderEditorOpen" (click)="closeLeaderEditor()"></div>
+<div class="modal" *ngIf="leaderEditorOpen" style="max-width:480px;">
+  <div class="modal-header">
+    <span>{{editingLeader ? 'Edit Leader' : 'Add Leader'}}</span>
+    <button class="btn-icon" (click)="closeLeaderEditor()">✕</button>
+  </div>
+  <div class="modal-body">
+    <div class="form-group">
+      <label>Name *</label>
+      <input class="form-control" [(ngModel)]="leaderForm.name" placeholder="Full name" />
+    </div>
+    <div class="form-group">
+      <label>Job Title *</label>
+      <input class="form-control" [(ngModel)]="leaderForm.jobTitle" placeholder="e.g. Pumping Supervisor" />
+    </div>
+    <div class="form-group">
+      <label>Mobile Phone</label>
+      <input class="form-control" [(ngModel)]="leaderForm.workMobilePhone" placeholder="(555) 555-5555" />
+    </div>
+    <div class="form-group">
+      <label>Alt Phone</label>
+      <input class="form-control" [(ngModel)]="leaderForm.altPhone" placeholder="Optional" />
+    </div>
+    <div class="form-group">
+      <label>Manager Name</label>
+      <input class="form-control" [(ngModel)]="leaderForm.managerName" placeholder="Reports to" />
+    </div>
+    <div class="form-group">
+      <label>Notes</label>
+      <input class="form-control" [(ngModel)]="leaderForm.notes" placeholder="Optional notes" />
+    </div>
+  </div>
+  <div class="modal-footer">
+    <button class="btn-ghost" (click)="closeLeaderEditor()">Cancel</button>
+    <button class="btn-primary" (click)="saveLeader()" [disabled]="!leaderForm.name || !leaderForm.jobTitle">Save</button>
   </div>
 </div>
 
@@ -187,11 +267,12 @@ const NOTE_ROLES  = [ROLES.Admin, ROLES.FieldSupervisor, ROLES.DispatchSuperviso
 export class ScheduleComponent implements OnInit, OnDestroy {
   @ViewChild('instrStrip') instrStrip?: BranchInstructionsComponent;
 
-  private route       = inject(ActivatedRoute);
-  private scheduleSvc = inject(ScheduleService);
-  private branchSvc   = inject(BranchService);
-  private instrSvc    = inject(InstructionService);
-  private auth        = inject(AuthService);
+  private route          = inject(ActivatedRoute);
+  private scheduleSvc    = inject(ScheduleService);
+  private branchSvc      = inject(BranchService);
+  private instrSvc       = inject(InstructionService);
+  private auth           = inject(AuthService);
+  private leaderSvc      = inject(BranchLeaderService);
 
   branchId = 0;
   year     = new Date().getFullYear();
@@ -201,6 +282,7 @@ export class ScheduleComponent implements OnInit, OnDestroy {
   summary:      BranchSummaryDto | null = null;
   statusCodes:  StatusCodeDto[] = [];
   instructions: BranchInstructionsDto | null = null;
+  leaders:      BranchLeader[] = [];
 
   paintMode    : string | null = null;
   selectedRows  = new Set<number>();
@@ -210,6 +292,10 @@ export class ScheduleComponent implements OnInit, OnDestroy {
   detailCell:   DayCellDto | null = null;
 
   instructionEditorOpen = false;
+  leaderEditorOpen      = false;
+  editingLeader:        BranchLeader | null = null;
+  leaderForm: UpsertBranchLeader = { branchId: 0, name: '', jobTitle: '', sortOrder: 0 };
+
   loading   = false;
   loadError = '';
 
@@ -226,6 +312,8 @@ export class ScheduleComponent implements OnInit, OnDestroy {
     const maxM = this.now.getMonth() + 2;
     return (this.year === maxY && this.month >= maxM) || (this.year > maxY);
   }
+
+  get isAdmin(): boolean { return this.auth.hasRole(ROLES.Admin); }
 
   get isCurrentMonth(): boolean {
     return this.year === this.now.getFullYear() && this.month === this.now.getMonth() + 1;
@@ -336,6 +424,7 @@ export class ScheduleComponent implements OnInit, OnDestroy {
         this.year  = qp.get('year')  ? +qp.get('year')!  : this.year;
         this.month = qp.get('month') ? +qp.get('month')! : this.month;
         this.loadAll();
+        this.loadLeaders();
       });
     });
 
@@ -346,6 +435,45 @@ export class ScheduleComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void { /* nothing */ }
+
+  // ── Leadership ──────────────────────────────────────────────────────────────
+  loadLeaders(): void {
+    if (!this.branchId) return;
+    this.leaderSvc.getByBranch(this.branchId).subscribe({
+      next: l => this.leaders = l,
+      error: () => this.leaders = []
+    });
+  }
+
+  openLeaderEditor(leader?: BranchLeader): void {
+    this.editingLeader = leader ?? null;
+    this.leaderForm = leader
+      ? { branchId: this.branchId, name: leader.name, jobTitle: leader.jobTitle,
+          workMobilePhone: leader.workMobilePhone, altPhone: leader.altPhone,
+          managerName: leader.managerName, notes: leader.notes,
+          sortOrder: leader.sortOrder }
+      : { branchId: this.branchId, name: '', jobTitle: '',
+          workMobilePhone: '', altPhone: '', managerName: '', notes: '',
+          sortOrder: this.leaders.length + 1 };
+    this.leaderEditorOpen = true;
+  }
+
+  editLeader(leader: BranchLeader): void { this.openLeaderEditor(leader); }
+
+  closeLeaderEditor(): void { this.leaderEditorOpen = false; this.editingLeader = null; }
+
+  saveLeader(): void {
+    if (!this.leaderForm.name || !this.leaderForm.jobTitle) return;
+    const obs = this.editingLeader
+      ? this.leaderSvc.update(this.branchId, this.editingLeader.id, this.leaderForm)
+      : this.leaderSvc.create(this.branchId, this.leaderForm);
+    obs.subscribe({ next: () => { this.loadLeaders(); this.closeLeaderEditor(); } });
+  }
+
+  deleteLeader(id: number): void {
+    if (!confirm('Remove this leader from the branch?')) return;
+    this.leaderSvc.delete(this.branchId, id).subscribe({ next: () => this.loadLeaders() });
+  }
 
   prevMonth(): void {
     if (this.month === 1) { this.year--; this.month = 12; }

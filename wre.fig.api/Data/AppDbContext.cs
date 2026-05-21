@@ -18,6 +18,7 @@ public class AppDbContext : IdentityDbContext<AppUser>
     public DbSet<AppUserResourceType> UserResourceTypes  => Set<AppUserResourceType>();
     public DbSet<MonthLock>           MonthLocks         => Set<MonthLock>();
     public DbSet<BranchInstruction>   BranchInstructions => Set<BranchInstruction>();
+    public DbSet<BranchLeader>        BranchLeaders      => Set<BranchLeader>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -88,6 +89,17 @@ public class AppDbContext : IdentityDbContext<AppUser>
         builder.Entity<BranchInstruction>(e =>
         {
             e.HasIndex(b => new { b.BranchId, b.Position });
+
+            e.HasOne(b => b.Branch)
+             .WithMany()
+             .HasForeignKey(b => b.BranchId)
+             .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // ── BranchLeader ───────────────────────────────────────────────────────
+        builder.Entity<BranchLeader>(e =>
+        {
+            e.HasIndex(b => new { b.BranchId, b.SortOrder });
 
             e.HasOne(b => b.Branch)
              .WithMany()

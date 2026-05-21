@@ -489,6 +489,45 @@ button:disabled { opacity: .45; cursor: not-allowed; }
 .fill-bar-fill.red   { background: #ef4444; }
 .fill-bar-label { font-size: .75rem; color: var(--ink-light); margin-top: .2rem; font-family: 'DM Mono', monospace; }
 
+// ── Leadership section ────────────────────────────────────────────────────
+.leadership-section {
+  margin-bottom: .75rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+}
+.leadership-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #1a202c;
+  color: #fff;
+  padding: .3rem .75rem;
+  font-size: .72rem;
+  font-weight: 700;
+  letter-spacing: .06em;
+}
+.leadership-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .8rem;
+  th {
+    background: #2d3748;
+    color: #e2e8f0;
+    font-weight: 600;
+    font-size: .72rem;
+    text-align: left;
+    padding: .3rem .6rem;
+    letter-spacing: .04em;
+  }
+  td { padding: .35rem .6rem; border-bottom: 1px solid var(--border-light); }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: var(--accent-light); }
+  .ldr-name  { font-weight: 600; white-space: nowrap; }
+  .ldr-info  { color: var(--ink-light); font-size: .78rem; }
+  .ldr-notes { font-style: italic; max-width: 200px; }
+}
+
 // ── Schedule table ────────────────────────────────────────────────────────
 .schedule-table-wrap { overflow-x: auto; border-radius: 6px; border: 1px solid var(--border); }
 .schedule-table {

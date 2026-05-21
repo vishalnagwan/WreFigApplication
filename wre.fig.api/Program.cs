@@ -107,6 +107,7 @@ builder.Services.AddScoped<IAuditRepository,       AuditRepository>();
 builder.Services.AddScoped<IUserRepository,        UserRepository>();
 builder.Services.AddScoped<IComplianceRepository,  ComplianceRepository>();
 builder.Services.AddScoped<IEmployeeRepository,    EmployeeRepository>();
+builder.Services.AddScoped<IBranchLeaderRepository, BranchLeaderRepository>();
 
 builder.Services.AddScoped<IBranchService,      BranchService>();
 builder.Services.AddScoped<IScheduleService,    ScheduleService>();
