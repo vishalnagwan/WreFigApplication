@@ -208,4 +208,108 @@ public class ScheduleRepository(AppDbContext db) : IScheduleRepository
 
         await db.SaveChangesAsync();
     }
+
+    // ── Pre-fill ──────────────────────────────────────────────────────────────
+
+    public async Task PreFillMonthAsync(int branchId, int year, int month, string filledBy)
+    {
+        var daysInMonth = DateTime.DaysInMonth(year, month);
+        var monthStart  = new DateOnly(year, month, 1);
+        var monthEnd    = new DateOnly(year, month, daysInMonth);
+
+        var employees = await db.Employees
+            .Where(e => e.BranchId == branchId && e.IsActive)
+            .ToListAsync();
+
+        if (employees.Count == 0) return;
+
+        var empIds = employees.Select(e => e.Id).ToList();
+        var existing = await db.ScheduleEntries
+            .Where(e => empIds.Contains(e.EmployeeId) && e.Date >= monthStart && e.Date <= monthEnd)
+            .Select(e => new { e.EmployeeId, e.Date })
+            .ToListAsync();
+
+        var existingSet = existing
+            .Select(x => (x.EmployeeId, x.Date))
+            .ToHashSet();
+
+        var now      = DateTime.UtcNow;
+        var toInsert = new List<ScheduleEntry>();
+
+        foreach (var emp in employees)
+        {
+            var defaultCode = emp.DefaultShift == "AM" ? "WA" : "WP";
+            for (var day = 1; day <= daysInMonth; day++)
+            {
+                var date = new DateOnly(year, month, day);
+                if (date.DayOfWeek is DayOfWeek.Saturday or DayOfWeek.Sunday) continue;
+                if (!existingSet.Contains((emp.Id, date)))
+                    toInsert.Add(new ScheduleEntry
+                    {
+                        EmployeeId = emp.Id,
+                        Date       = date,
+                        StatusCode = defaultCode,
+                        CreatedAt  = now,
+                        CreatedBy  = filledBy
+                    });
+            }
+        }
+
+        if (toInsert.Count > 0)
+        {
+            db.ScheduleEntries.AddRange(toInsert);
+            await db.SaveChangesAsync();
+        }
+    }
+
+    public async Task PreFillEmployeeAsync(int employeeId, string filledBy)
+    {
+        var employee = await db.Employees.FindAsync(employeeId);
+        if (employee is null || !employee.IsActive) return;
+
+        var openMonths = await db.MonthLocks
+            .Where(m => m.IsOpen)
+            .OrderBy(m => m.Year).ThenBy(m => m.Month)
+            .ToListAsync();
+
+        if (openMonths.Count == 0) return;
+
+        var defaultCode = employee.DefaultShift == "AM" ? "WA" : "WP";
+        var now         = DateTime.UtcNow;
+        var toInsert    = new List<ScheduleEntry>();
+
+        foreach (var ml in openMonths)
+        {
+            var daysInMonth = DateTime.DaysInMonth(ml.Year, ml.Month);
+            var monthStart  = new DateOnly(ml.Year, ml.Month, 1);
+            var monthEnd    = new DateOnly(ml.Year, ml.Month, daysInMonth);
+
+            var existing = await db.ScheduleEntries
+                .Where(e => e.EmployeeId == employeeId && e.Date >= monthStart && e.Date <= monthEnd)
+                .Select(e => e.Date)
+                .ToListAsync();
+            var existingSet = existing.ToHashSet();
+
+            for (var day = 1; day <= daysInMonth; day++)
+            {
+                var date = new DateOnly(ml.Year, ml.Month, day);
+                if (date.DayOfWeek is DayOfWeek.Saturday or DayOfWeek.Sunday) continue;
+                if (!existingSet.Contains(date))
+                    toInsert.Add(new ScheduleEntry
+                    {
+                        EmployeeId = employeeId,
+                        Date       = date,
+                        StatusCode = defaultCode,
+                        CreatedAt  = now,
+                        CreatedBy  = filledBy
+                    });
+            }
+        }
+
+        if (toInsert.Count > 0)
+        {
+            db.ScheduleEntries.AddRange(toInsert);
+            await db.SaveChangesAsync();
+        }
+    }
 }

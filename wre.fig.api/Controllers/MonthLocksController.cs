@@ -40,4 +40,15 @@ public class MonthLocksController(IMonthStateService monthSvc) : ControllerBase
         await monthSvc.CloseMonthAsync(year, month, ActorName);
         return NoContent();
     }
+
+    /// <summary>
+    /// One-time admin action: idempotently pre-fills schedule entries for all active
+    /// employees across every currently-open month. Safe to call multiple times.
+    /// </summary>
+    [HttpPost("backfill")]
+    public async Task<IActionResult> Backfill()
+    {
+        await monthSvc.BackfillOpenMonthsAsync(ActorName);
+        return NoContent();
+    }
 }

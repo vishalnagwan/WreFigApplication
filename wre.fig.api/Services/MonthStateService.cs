@@ -2,11 +2,12 @@ using Microsoft.EntityFrameworkCore;
 using Wre.Fig.Api.Data;
 using Wre.Fig.Api.DTOs;
 using Wre.Fig.Api.Models.Entities;
+using Wre.Fig.Api.Repository.Interfaces;
 using Wre.Fig.Api.Services.Interfaces;
 
 namespace Wre.Fig.Api.Services;
 
-public class MonthStateService(AppDbContext db) : IMonthStateService
+public class MonthStateService(AppDbContext db, IScheduleRepository scheduleRepo) : IMonthStateService
 {
     public async Task<List<MonthLockDto>> GetAllAsync()
     {
@@ -34,6 +35,8 @@ public class MonthStateService(AppDbContext db) : IMonthStateService
             return (dt.Year, dt.Month);
         }).ToList();
 
+        var newlyOpened = new List<(int Year, int Month)>();
+
         foreach (var (year, month) in months)
         {
             var existing = await db.MonthLocks.FirstOrDefaultAsync(m => m.Year == year && m.Month == month);
@@ -47,10 +50,20 @@ public class MonthStateService(AppDbContext db) : IMonthStateService
                     ModifiedAt = DateTime.UtcNow,
                     ModifiedBy = modifiedBy,
                 });
+                newlyOpened.Add((year, month));
             }
         }
 
         await db.SaveChangesAsync();
+
+        // Pre-fill workday defaults for any months created this run
+        if (newlyOpened.Count > 0)
+        {
+            var branchIds = await db.Branches.Select(b => b.Id).ToListAsync();
+            foreach (var (year, month) in newlyOpened)
+                foreach (var bId in branchIds)
+                    await scheduleRepo.PreFillMonthAsync(bId, year, month, modifiedBy);
+        }
     }
 
     public async Task OpenMonthAsync(int year, int month, string modifiedBy)
@@ -58,6 +71,16 @@ public class MonthStateService(AppDbContext db) : IMonthStateService
 
     public async Task CloseMonthAsync(int year, int month, string modifiedBy)
         => await SetStateAsync(year, month, false, modifiedBy);
+
+    public async Task BackfillOpenMonthsAsync(string filledBy)
+    {
+        var openMonths = await db.MonthLocks.Where(m => m.IsOpen).ToListAsync();
+        var branchIds  = await db.Branches.Select(b => b.Id).ToListAsync();
+
+        foreach (var ml in openMonths)
+            foreach (var bId in branchIds)
+                await scheduleRepo.PreFillMonthAsync(bId, ml.Year, ml.Month, filledBy);
+    }
 
     private async Task SetStateAsync(int year, int month, bool isOpen, string modifiedBy)
     {
@@ -73,5 +96,13 @@ public class MonthStateService(AppDbContext db) : IMonthStateService
             ml.ModifiedBy = modifiedBy;
         }
         await db.SaveChangesAsync();
+
+        // Whenever a month is (re-)opened, ensure all branches have default entries
+        if (isOpen)
+        {
+            var branchIds = await db.Branches.Select(b => b.Id).ToListAsync();
+            foreach (var bId in branchIds)
+                await scheduleRepo.PreFillMonthAsync(bId, year, month, modifiedBy);
+        }
     }
 }
