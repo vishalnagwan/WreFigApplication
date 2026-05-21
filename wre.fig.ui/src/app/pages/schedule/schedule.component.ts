@@ -94,7 +94,7 @@ const NOTE_ROLES  = [ROLES.Admin, ROLES.FieldSupervisor, ROLES.DispatchSuperviso
         <th class="resource-col">Resource Type</th>
         <th class="manager-col">Manager</th>
         <th class="mobile-col">Mobile</th>
-        <th *ngFor="let d of grid.days" [class.weekend]="d.isWeekend">
+        <th *ngFor="let d of grid.days" class="date-col" [class.weekend]="d.isWeekend">
           <div class="day-hdr">
             <span class="day-abbr">{{d.dayAbbr | titlecase}}</span>
             <span class="day-num">{{d.day}}</span>
