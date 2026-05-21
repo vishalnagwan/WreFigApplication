@@ -234,7 +234,7 @@ public static class DataSeeder
         var userDefs = new UserSeedDef[]
         {
             new("admin@wre.com",    "Admin@123!", "Admin User",        AppRoles.Admin,   null,                                            AllBranches: true),
-            new("planner@wre.com",  "Admin@123!", "Plan Ner",          AppRoles.Admin,   null,                                            AllBranches: true),
+            new("planner@wre.com",  "Admin@123!", "Plan Ner",          AppRoles.Planner, null,                                            AllBranches: true),
             new("fsup@wre.com",     "Admin@123!", "Field Supervisor",  AppRoles.FieldSupervisor,    ["Swedesboro - NJ"]),
             new("dsup@wre.com",     "Admin@123!", "Dispatch Sup",      AppRoles.DispatchSupervisor, ["Swedesboro - NJ", "Vineland - NJ"]),
             new("mickey@wre.com",   "Admin@123!", "Mickey Planner",    AppRoles.Planner,            ["Stanley - NC", "Boone - NC", "Durham - NC"]),
