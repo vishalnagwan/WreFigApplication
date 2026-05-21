@@ -137,7 +137,7 @@ import { ShiftChipComponent }    from '../shift-chip/shift-chip.component';
     <div class="detail-panel-footer">
       <div class="fleetio-status">
         <span class="fleetio-dot"></span>
-        <span>Fleetio sync enabled</span>
+        <span>Fleetio sync disabled</span>
       </div>
       <a class="fleetio-link" href="https://app.fleetio.com" target="_blank" rel="noopener">
         View in Fleetio ↗

@@ -11,7 +11,7 @@ import { FillBarComponent }          from '../../shared/fill-bar/fill-bar.compon
   imports:    [CommonModule, RouterModule, FillBarComponent],
   template: `
 <div class="page-header">
-  <h1>Compliance</h1>
+  <h1>Compliance Report</h1>
   <div class="month-nav" style="margin-left:auto;">
     <button class="btn-icon" (click)="prevMonth()">‹</button>
     <span>{{monthLabel}}</span>

@@ -51,38 +51,46 @@ const NOTE_ROLES  = [ROLES.Admin, ROLES.FieldSupervisor, ROLES.DispatchSuperviso
   </div>
 </div>
 
-<!-- Leadership Information -->
-<div class="leadership-section" *ngIf="leaders.length > 0">
-  <div class="leadership-section-header">
-    <span>LEADERSHIP INFORMATION</span>
+<!-- Leadership pill (same visual pattern as instruction chips) -->
+<div class="instr-bar" *ngIf="leaders.length > 0">
+  <span class="instr-chip"
+        [class.active]="leadershipExpanded"
+        (click)="leadershipExpanded = !leadershipExpanded">
+    Leadership
+    <span class="instr-badge">{{leaders.length}}</span>
+  </span>
+</div>
+
+<!-- Leadership popover -->
+<div class="instr-popover" *ngIf="leadershipExpanded && leaders.length > 0">
+  <div class="instr-popover-hdr">
+    Leadership Information
+    <button class="btn-icon" style="color:#fff;font-size:.8rem;" (click)="leadershipExpanded = false">✕</button>
   </div>
-  <table class="leadership-table">
-    <thead>
-      <tr>
-        <th>Name</th>
-        <th>Job Title</th>
-        <th>Mobile</th>
-        <th>Alt Phone</th>
-        <th>Manager</th>
-        <th>Notes</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr *ngFor="let ldr of leaders">
-        <td class="ldr-name">{{ldr.name}}</td>
-        <td class="ldr-info">{{ldr.jobTitle || '—'}}</td>
-        <td class="ldr-info">{{ldr.workMobilePhone || '—'}}</td>
-        <td class="ldr-info">{{ldr.altPhone || '—'}}</td>
-        <td class="ldr-info">{{ldr.managerName || '—'}}</td>
-        <td class="ldr-info ldr-notes">{{ldr.notes || '—'}}</td>
-      </tr>
-      <tr *ngIf="leaders.length === 0">
-        <td colspan="7" style="text-align:center;color:var(--ink-faint);font-size:.8rem;padding:.5rem;">
-          No leadership information configured for this branch.
-        </td>
-      </tr>
-    </tbody>
-  </table>
+  <div class="instr-popover-body" style="overflow-x:auto;padding:0;">
+    <table class="leadership-table">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Job Title</th>
+          <th>Mobile</th>
+          <th>Alt Phone</th>
+          <th>Manager</th>
+          <th>Notes</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let ldr of leaders">
+          <td class="ldr-name">{{ldr.name}}</td>
+          <td class="ldr-info">{{ldr.jobTitle || '—'}}</td>
+          <td class="ldr-info">{{formatPhone(ldr.workMobilePhone)}}</td>
+          <td class="ldr-info">{{formatPhone(ldr.altPhone)}}</td>
+          <td class="ldr-info">{{ldr.managerName || '—'}}</td>
+          <td class="ldr-info ldr-notes">{{ldr.notes || '—'}}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
 </div>
 
 <!-- Leader editor modal -->
@@ -285,6 +293,7 @@ export class ScheduleComponent implements OnInit, OnDestroy {
   detailDay:    number | null = null;
   detailCell:   DayCellDto | null = null;
 
+  leadershipExpanded    = false;
   instructionEditorOpen = false;
   leaderEditorOpen      = false;
   editingLeader:        BranchLeader | null = null;
@@ -433,10 +442,21 @@ export class ScheduleComponent implements OnInit, OnDestroy {
   // ── Leadership ──────────────────────────────────────────────────────────────
   loadLeaders(): void {
     if (!this.branchId) return;
+    this.leadershipExpanded = false;
     this.leaderSvc.getByBranch(this.branchId).subscribe({
       next: l => this.leaders = l,
       error: () => this.leaders = []
     });
+  }
+
+  formatPhone(phone: string | undefined | null): string {
+    if (!phone) return '—';
+    const digits = phone.replace(/\D/g, '');
+    if (digits.length === 11 && digits[0] === '1')
+      return `(${digits.slice(1,4)})-${digits.slice(4,7)}-${digits.slice(7)}`;
+    if (digits.length === 10)
+      return `(${digits.slice(0,3)})-${digits.slice(3,6)}-${digits.slice(6)}`;
+    return phone; // non-standard length — return as-is
   }
 
   openLeaderEditor(leader?: BranchLeader): void {
