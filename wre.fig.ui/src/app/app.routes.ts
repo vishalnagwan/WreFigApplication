@@ -42,5 +42,9 @@ export const routes: Routes = [
       }
     ]
   },
+  {
+    path: 'dev/feedback-report',
+    loadComponent: () => import('./pages/feedback-report/feedback-report.component').then(m => m.FeedbackReportComponent)
+  },
   { path: '**', redirectTo: '' }
 ];

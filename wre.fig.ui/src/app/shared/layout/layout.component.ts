@@ -1,15 +1,24 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule }              from '@angular/common';
-import { RouterModule }              from '@angular/router';
+import { Router, RouterModule }      from '@angular/router';
 import { AuthService }               from '../../services/auth.service';
 import { AuditService }              from '../../services/audit.service';
 import { SignalrService }            from '../../services/signalr.service';
 import { ROLES }                     from '../../../constants';
+import { FeedbackPanelComponent }    from '../feedback-panel/feedback-panel.component';
+
+const PAGE_MAP: Record<string, string> = {
+  '':          'Home',
+  'compliance':'Compliance',
+  'alerts':    'Alerts',
+  'users':     'Users',
+  'technician':'Technician',
+};
 
 @Component({
   selector:   'app-layout',
   standalone: true,
-  imports:    [CommonModule, RouterModule],
+  imports:    [CommonModule, RouterModule, FeedbackPanelComponent],
   template: `
 <div class="app-shell">
   <header class="topbar">
@@ -41,6 +50,7 @@ import { ROLES }                     from '../../../constants';
       <span class="app-title">FIG (Field Information Guide)</span>
     </div>
     <div class="topbar-right">
+      <button class="btn-ghost btn-sm" (click)="showFeedbackPanel = true">Feedback</button>
       <div class="topbar-user">
         <span>{{userName}}</span>
         <button class="btn-ghost btn-sm" (click)="logout()">Sign out</button>
@@ -51,14 +61,28 @@ import { ROLES }                     from '../../../constants';
     <router-outlet></router-outlet>
   </main>
 </div>
+
+<app-feedback-panel
+  *ngIf="showFeedbackPanel"
+  [page]="currentPage"
+  (close)="showFeedbackPanel = false">
+</app-feedback-panel>
   `
 })
 export class LayoutComponent implements OnInit {
   private auth    = inject(AuthService);
   private auditSvc = inject(AuditService);
   private signalr = inject(SignalrService);
+  private router  = inject(Router);
 
-  alertCount = 0;
+  alertCount        = 0;
+  showFeedbackPanel = false;
+
+  get currentPage(): string {
+    const seg = this.router.url.split('/')[1]?.split('?')[0] ?? '';
+    if (seg.startsWith('schedule')) return 'Schedule';
+    return PAGE_MAP[seg] ?? 'Home';
+  }
 
   get userName(): string {
     return this.auth.getUserFullName();
