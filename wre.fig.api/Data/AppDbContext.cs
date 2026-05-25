@@ -19,6 +19,7 @@ public class AppDbContext : IdentityDbContext<AppUser>
     public DbSet<MonthLock>           MonthLocks         => Set<MonthLock>();
     public DbSet<BranchInstruction>   BranchInstructions => Set<BranchInstruction>();
     public DbSet<BranchLeader>        BranchLeaders      => Set<BranchLeader>();
+    public DbSet<FeedbackEntry>       FeedbackEntries    => Set<FeedbackEntry>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

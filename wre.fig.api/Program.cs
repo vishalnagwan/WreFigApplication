@@ -118,6 +118,8 @@ builder.Services.AddScoped<IAuthService,        AuthService>();
 builder.Services.AddScoped<IStatusCodeService,  StatusCodeService>();
 builder.Services.AddScoped<IMonthStateService,  MonthStateService>();
 builder.Services.AddScoped<IEmployeeService,    EmployeeService>();
+builder.Services.AddScoped<IFeedbackRepository, FeedbackRepository>();
+builder.Services.AddScoped<IFeedbackService,    FeedbackService>();
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
@@ -148,6 +150,34 @@ using (var scope = app.Services.CreateScope())
         logger.LogWarning(ex,
             "Migration step failed – tables likely already exist from the shared Blazor DB. " +
             "Continuing with seeding…");
+    }
+
+    // ── Ensure FeedbackEntries table exists (manual migration fallback) ──────
+    try
+    {
+        await dbCtx.Database.ExecuteSqlRawAsync(@"
+            IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.TABLES
+                           WHERE TABLE_NAME = 'FeedbackEntries')
+            BEGIN
+                CREATE TABLE [dbo].[FeedbackEntries] (
+                    [Id]            INT IDENTITY(1,1)   NOT NULL,
+                    [Page]          NVARCHAR(100)        NOT NULL,
+                    [Category]      NVARCHAR(200)        NOT NULL,
+                    [Comment]       NVARCHAR(MAX)        NOT NULL,
+                    [UserId]        NVARCHAR(450)        NOT NULL,
+                    [UserName]      NVARCHAR(256)        NOT NULL,
+                    [CreatedAt]     DATETIME2            NOT NULL,
+                    [IsImplemented] BIT                  NOT NULL DEFAULT 0,
+                    CONSTRAINT [PK_FeedbackEntries] PRIMARY KEY ([Id])
+                );
+                CREATE INDEX [IX_FeedbackEntries_Page]      ON [dbo].[FeedbackEntries] ([Page]);
+                CREATE INDEX [IX_FeedbackEntries_CreatedAt] ON [dbo].[FeedbackEntries] ([CreatedAt]);
+            END");
+        logger.LogInformation("FeedbackEntries table verified/created.");
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "Failed to ensure FeedbackEntries table.");
     }
 
     await DataSeeder.SeedAsync(scope.ServiceProvider);
