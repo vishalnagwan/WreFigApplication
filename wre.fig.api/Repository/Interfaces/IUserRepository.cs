@@ -4,8 +4,9 @@ namespace Wre.Fig.Api.Repository.Interfaces;
 
 public interface IUserRepository
 {
-    Task<List<UserDto>> GetAllAsync();
-    Task<UserDto?>      GetByIdAsync(string userId);
-    Task UpdateAsync(UserDto dto);
-    Task DeleteAsync(string userId);
+    Task<List<UserListDto>> GetAllAsync();
+    Task<UserListDto?>      GetByIdAsync(string userId);
+    Task                    CreateAsync(CreateUserDto dto);
+    Task                    UpdateAsync(string id, EditUserDto dto);
+    Task                    DeleteAsync(string userId);
 }

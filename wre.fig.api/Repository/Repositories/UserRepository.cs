@@ -9,7 +9,9 @@ namespace Wre.Fig.Api.Repository.Repositories;
 
 public class UserRepository(AppDbContext db, UserManager<AppUser> userManager) : IUserRepository
 {
-    public async Task<List<UserDto>> GetAllAsync()
+    // ── Read ─────────────────────────────────────────────────────────────────
+
+    public async Task<List<UserListDto>> GetAllAsync()
     {
         var users = await db.Users
             .Include(u => u.UserBranches).ThenInclude(ub => ub.Branch)
@@ -17,7 +19,7 @@ public class UserRepository(AppDbContext db, UserManager<AppUser> userManager) :
             .OrderBy(u => u.FullName)
             .ToListAsync();
 
-        var result = new List<UserDto>();
+        var result = new List<UserListDto>();
         foreach (var u in users)
         {
             var roles = await userManager.GetRolesAsync(u);
@@ -26,7 +28,7 @@ public class UserRepository(AppDbContext db, UserManager<AppUser> userManager) :
         return result;
     }
 
-    public async Task<UserDto?> GetByIdAsync(string userId)
+    public async Task<UserListDto?> GetByIdAsync(string userId)
     {
         var u = await db.Users
             .Include(u => u.UserBranches).ThenInclude(ub => ub.Branch)
@@ -34,12 +36,97 @@ public class UserRepository(AppDbContext db, UserManager<AppUser> userManager) :
             .FirstOrDefaultAsync(u => u.Id == userId);
 
         if (u is null) return null;
-
         var roles = await userManager.GetRolesAsync(u);
         return ToDto(u, roles);
     }
 
-    private static UserDto ToDto(AppUser u, IList<string> roles) => new()
+    // ── Create ───────────────────────────────────────────────────────────────
+
+    public async Task CreateAsync(CreateUserDto dto)
+    {
+        var user = new AppUser
+        {
+            UserName       = dto.Email,
+            Email          = dto.Email,
+            FullName       = dto.FullName,
+            IsActive       = true,
+            CreatedAt      = DateTime.UtcNow,
+            EmailConfirmed = true,
+        };
+
+        var result = await userManager.CreateAsync(user, dto.Password);
+        if (!result.Succeeded)
+            throw new InvalidOperationException(
+                string.Join("; ", result.Errors.Select(e => e.Description)));
+
+        await userManager.AddToRoleAsync(user, dto.Role);
+
+        foreach (var branchId in dto.BranchIds)
+            db.UserBranches.Add(new AppUserBranch { UserId = user.Id, BranchId = branchId });
+
+        await db.SaveChangesAsync();
+    }
+
+    // ── Update ───────────────────────────────────────────────────────────────
+
+    public async Task UpdateAsync(string id, EditUserDto dto)
+    {
+        var u = await db.Users
+            .Include(u => u.UserBranches)
+            .Include(u => u.UserResourceTypes)
+            .FirstOrDefaultAsync(u => u.Id == id);
+
+        if (u is null) return;
+
+        // Basic fields
+        u.FullName = dto.FullName;
+        u.Email    = dto.Email;
+        u.UserName = dto.Email;
+        u.IsActive = dto.IsActive;
+
+        // Password — only update if provided
+        if (!string.IsNullOrWhiteSpace(dto.Password))
+        {
+            var token = await userManager.GeneratePasswordResetTokenAsync(u);
+            var pwResult = await userManager.ResetPasswordAsync(u, token, dto.Password);
+            if (!pwResult.Succeeded)
+                throw new InvalidOperationException(
+                    string.Join("; ", pwResult.Errors.Select(e => e.Description)));
+        }
+
+        // Role — replace existing role(s) with new one
+        var currentRoles = await userManager.GetRolesAsync(u);
+        if (currentRoles.Count > 0)
+            await userManager.RemoveFromRolesAsync(u, currentRoles);
+        if (!string.IsNullOrWhiteSpace(dto.Role))
+            await userManager.AddToRoleAsync(u, dto.Role);
+
+        // Branches
+        db.UserBranches.RemoveRange(u.UserBranches);
+        foreach (var bid in dto.BranchIds)
+            db.UserBranches.Add(new AppUserBranch { UserId = u.Id, BranchId = bid });
+
+        // Resource types
+        db.UserResourceTypes.RemoveRange(u.UserResourceTypes);
+        foreach (var rt in dto.ResourceTypeNames)
+            db.UserResourceTypes.Add(new AppUserResourceType { UserId = u.Id, ResourceTypeName = rt });
+
+        await db.SaveChangesAsync();
+    }
+
+    // ── Delete (soft) ────────────────────────────────────────────────────────
+
+    public async Task DeleteAsync(string userId)
+    {
+        var u = await db.Users.FindAsync(userId);
+        if (u is null) return;
+        u.IsActive = false;
+        await db.SaveChangesAsync();
+    }
+
+    // ── Mapping ──────────────────────────────────────────────────────────────
+
+    private static UserListDto ToDto(AppUser u, IList<string> roles) => new()
     {
         Id                = u.Id,
         FullName          = u.FullName,
@@ -54,40 +141,4 @@ public class UserRepository(AppDbContext db, UserManager<AppUser> userManager) :
                               .ToList(),
         ResourceTypeNames = u.UserResourceTypes.Select(rt => rt.ResourceTypeName).ToList(),
     };
-
-    public async Task UpdateAsync(UserDto dto)
-    {
-        var u = await db.Users
-            .Include(u => u.UserBranches)
-            .Include(u => u.UserResourceTypes)
-            .FirstOrDefaultAsync(u => u.Id == dto.Id);
-
-        if (u is null) return;
-
-        u.FullName = dto.FullName;
-        u.Email    = dto.Email;
-        u.UserName = dto.Email;
-
-        // Update branches
-        db.UserBranches.RemoveRange(u.UserBranches);
-        foreach (var bid in dto.BranchIds)
-            db.UserBranches.Add(new AppUserBranch { UserId = u.Id, BranchId = bid });
-
-        // Update resource types
-        db.UserResourceTypes.RemoveRange(u.UserResourceTypes);
-        foreach (var rt in dto.ResourceTypeNames)
-            db.UserResourceTypes.Add(new AppUserResourceType { UserId = u.Id, ResourceTypeName = rt });
-
-        await db.SaveChangesAsync();
-    }
-
-    public async Task DeleteAsync(string userId)
-    {
-        var u = await db.Users.FindAsync(userId);
-        if (u is null) return;
-
-        // Soft-delete
-        u.IsActive = false;
-        await db.SaveChangesAsync();
-    }
 }
