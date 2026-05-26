@@ -3,7 +3,7 @@ import { CommonModule }    from '@angular/common';
 import { FormsModule }     from '@angular/forms';
 import { FeedbackService } from '../../services/feedback.service';
 import { FeedbackItemDto } from '../../models/feedback.model';
-import { FEEDBACK_CATEGORIES } from '../../../constants';
+import { FEEDBACK_CATEGORIES, FEEDBACK_PLACEHOLDERS } from '../../../constants';
 
 @Component({
   selector:   'app-feedback-panel',
@@ -197,7 +197,7 @@ import { FEEDBACK_CATEGORIES } from '../../../constants';
           <!-- Inline add form -->
           <div class="fb-add-form" *ngIf="activeAddCat === cat">
             <textarea [(ngModel)]="newComment"
-                      placeholder="Describe what you observed, what's missing, or what could be improved…"
+                      [placeholder]="placeholderFor(cat)"
                       (keydown.escape)="cancelAdd()">
             </textarea>
             <div class="fb-add-form-footer">
@@ -256,6 +256,10 @@ export class FeedbackPanelComponent implements OnChanges {
 
   entriesFor(cat: string): FeedbackItemDto[] {
     return this.entries.filter(e => e.category === cat);
+  }
+
+  placeholderFor(cat: string): string {
+    return FEEDBACK_PLACEHOLDERS[cat] ?? 'Describe what you observed, what\'s missing, or what could be improved…';
   }
 
   ngOnChanges(): void {

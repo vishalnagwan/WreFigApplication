@@ -245,7 +245,7 @@ export class UsersComponent implements OnInit {
       };
       this.userSvc.createUser(dto).subscribe({
         next: () => { this.saving = false; this.showModal = false; this.loadUsers(); },
-        error: () => { this.saving = false; this.modalError = 'Save failed. Please try again.'; }
+        error: (err) => { this.saving = false; this.modalError = err?.error?.error ?? 'Save failed. Please try again.'; }
       });
     } else {
       const dto: EditUserDto = {
@@ -259,7 +259,7 @@ export class UsersComponent implements OnInit {
       };
       this.userSvc.updateUser(this.selectedUser!.id, dto).subscribe({
         next: () => { this.saving = false; this.showModal = false; this.loadUsers(); },
-        error: () => { this.saving = false; this.modalError = 'Save failed. Please try again.'; }
+        error: (err) => { this.saving = false; this.modalError = err?.error?.error ?? 'Save failed. Please try again.'; }
       });
     }
   }

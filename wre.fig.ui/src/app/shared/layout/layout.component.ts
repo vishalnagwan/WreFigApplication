@@ -47,7 +47,7 @@ const PAGE_MAP: Record<string, string> = {
       </nav>
     </div>
     <div class="topbar-center">
-      <span class="app-title">FIG (Field Information Guide)</span>
+      <span class="app-title">FIG - Field Information Guide</span>
     </div>
     <div class="topbar-right">
       <button class="btn-ghost btn-sm" (click)="showFeedbackPanel = true">Feedback</button>
