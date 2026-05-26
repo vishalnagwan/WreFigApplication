@@ -107,7 +107,7 @@ export const FEEDBACK_PLACEHOLDERS: Record<string, string> = {
   'Month Navigation':
     'Suggestions for navigating between months — arrows, date picker, default month shown, or navigation speed.',
   'Search & Filtering':
-    'How should search and filtering work? What fields should be searchable or filterable on this page?',
+    'Please let us know if the current search and filtering options meet your expectations, or if you would like any modifications or additional fields to be included.',
   'Notifications & Bell Icon':
     'This feature is not yet implemented. Share what notifications would be most useful — status changes, compliance alerts, or schedule updates.',
   'Page Performance':
@@ -129,7 +129,7 @@ export const FEEDBACK_PLACEHOLDERS: Record<string, string> = {
   'Status Assignment':
     'Feedback on assigning a status to an employee — click behavior, confirmation, ease of use, or errors encountered.',
   'Multi Assignment of Statuses':
-    'Suggestions for assigning the same status to multiple employees at once — selection method, bulk apply, or undo support.',
+    'Suggestions for assigning the same status to multiple technicians at once — selection method, bulk apply, or undo support.',
   'Driver Info Panel':
     'Feedback on the driver info panel — information shown, layout, change history display, or overall usability.',
   'Supervisor Notes':
