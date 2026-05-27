@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["src/constants.ts"],
-  "sourcesContent": ["export const APP_TITLE      = 'FIG';\nexport const APP_FULL_TITLE = 'FIG (Field Information Guide)';\n\nexport const ROLES = {\n  PlannerDashboard:   'PlannerDashboard',\n  FieldSupervisor:    'FieldSupervisor',\n  DispatchSupervisor: 'DispatchSupervisor',\n  Planner:            'Planner',\n  Dispatcher:         'Dispatcher',\n  ReadOnly:           'ReadOnly'\n} as const;\n\nexport const EDIT_ROLES = [\n  ROLES.PlannerDashboard,\n  ROLES.FieldSupervisor,\n  ROLES.DispatchSupervisor,\n  ROLES.Planner,\n  ROLES.Dispatcher\n];\n\nexport const INSTRUCTION_EDIT_ROLES = [\n  ROLES.PlannerDashboard,\n  ROLES.FieldSupervisor,\n  ROLES.DispatchSupervisor,\n  ROLES.Planner,\n  ROLES.Dispatcher\n];\n\nexport const REGION_ORDER = ['Mid-Atlantic', 'Mid-South', 'South', 'North'];\n\nexport const STATUS_CODES = ['WA', 'WP', 'O', 'CO', 'OC', 'TR', 'HD', 'WX'] as const;\n"],
-  "mappings": ";AAGO,IAAM,QAAQ;EACnB,kBAAoB;EACpB,iBAAoB;EACpB,oBAAoB;EACpB,SAAoB;EACpB,YAAoB;EACpB,UAAoB;;AAGf,IAAM,aAAa;EACxB,MAAM;EACN,MAAM;EACN,MAAM;EACN,MAAM;EACN,MAAM;;AAGD,IAAM,yBAAyB;EACpC,MAAM;EACN,MAAM;EACN,MAAM;EACN,MAAM;EACN,MAAM;;AAGD,IAAM,eAAe,CAAC,gBAAgB,aAAa,SAAS,OAAO;",
-  "names": []
-}

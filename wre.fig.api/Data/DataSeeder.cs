@@ -231,27 +231,14 @@ public static class DataSeeder
     {
         var branches = await db.Branches.ToListAsync();
 
-        var midAtlantic = new[]
-        {
-            "Swedesboro - NJ", "Vineland - NJ", "Philadelphia - PA",
-            "Reading - PA", "Washington - PA", "Loretto - PA",
-            "Newark - DE", "Elkton - MD", "Baltimore - MD"
-        };
-
         var userDefs = new UserSeedDef[]
         {
-            new("admin@wre.com",      "Admin@123!",      "Admin User",       AppRoles.Admin,              null,          AllBranches: true),
-            new("planner@wre.com",    "Admin@123!",      "Plan Ner",         AppRoles.Planner,            null,          AllBranches: true),
-            new("fsup@wre.com",       "Admin@123!",      "Field Supervisor", AppRoles.FieldSupervisor,    ["Swedesboro - NJ"]),
-            new("dsup@wre.com",       "Admin@123!",      "Dispatch Sup",     AppRoles.DispatchSupervisor, ["Swedesboro - NJ", "Vineland - NJ"]),
-            new("mickey@wre.com",     "Admin@123!",      "Mickey Planner",   AppRoles.Planner,            ["Stanley - NC", "Boone - NC", "Durham - NC"]),
-            new("dispatch@wre.com",   "Admin@123!",      "Dispatcher One",   AppRoles.Dispatcher,         ["Swedesboro - NJ"]),
-            new("employee@wre.com",   "Admin@123!",      "Employee One",     AppRoles.OtherEmployee,      ["Swedesboro - NJ"]),
-            // Named users
-            new("pegt@wre.com",       "Pegt@123!",       "Peg Trentini",     AppRoles.Admin,              null,          AllBranches: true),
-            new("jessicad@wre.com",   "Jessicad@123!",   "Jessica Dudek",    AppRoles.Dispatcher,         null,          AllBranches: true),
-            new("feliciad@wre.com",   "Feliciad@123!",   "Felicia Durham",   AppRoles.FieldSupervisor,    null,          AllBranches: true),
-            new("sherryA@wre.com",    "Sherrya@123!",    "Sherry Anaya",     AppRoles.Planner,            midAtlantic),
+            new("admin@wre.com",    "Admin@123!", "Admin User",       AppRoles.Admin,              null,                                            AllBranches: true),
+            new("planner@wre.com",  "Admin@123!", "Plan Ner",         AppRoles.Planner,            null,                                            AllBranches: true),
+            new("fsup@wre.com",     "Admin@123!", "Field Supervisor", AppRoles.FieldSupervisor,    ["Swedesboro - NJ"]),
+            new("dsup@wre.com",     "Admin@123!", "Dispatch Sup",     AppRoles.DispatchSupervisor, ["Swedesboro - NJ", "Vineland - NJ"]),
+            new("dispatch@wre.com", "Admin@123!", "Dispatcher One",   AppRoles.Dispatcher,         ["Swedesboro - NJ"]),
+            new("employee@wre.com", "Admin@123!", "Employee One",     AppRoles.OtherEmployee,      ["Swedesboro - NJ"]),
         };
 
         foreach (var def in userDefs)
