@@ -119,7 +119,7 @@ export const FEEDBACK_PLACEHOLDERS: Record<string, string> = {
   'Branch Header':
     'Feedback on the branch header — information shown, layout, or quick actions that would be helpful.',
   'Branch Instructions Display':
-    'How are branch instructions displayed? Is the location, formatting, or visibility adequate?',
+    'How are branch instructions displayed? Is the placement, formatting, or visibility adequate?',
   'Branch Instructions Capture':
     'How can adding or editing branch instructions be improved? Consider the form layout, save experience, or character limits.',
   'Schedule Grid Layout':
