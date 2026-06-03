@@ -1,12 +1,12 @@
 import { NgModule }             from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import { authGuard }            from './guards/auth.guard';
-import { LayoutComponent }      from './shared/layout/layout.component';
+import { LayoutComponent }      from './components/shared/layout/layout.component';
 
 const routes: Routes = [
   {
     path: 'login',
-    loadComponent: () => import('./pages/login/login.component').then(m => m.LoginComponent)
+    loadComponent: () => import('./components/pages/login/login.component').then(m => m.LoginComponent)
   },
   {
     path: '',
@@ -15,27 +15,27 @@ const routes: Routes = [
     children: [
       {
         path: '',
-        loadComponent: () => import('./pages/home/home.component').then(m => m.HomeComponent)
+        loadComponent: () => import('./components/pages/home/home.component').then(m => m.HomeComponent)
       },
       {
         path: 'schedule/:branchId',
-        loadComponent: () => import('./pages/schedule/schedule.component').then(m => m.ScheduleComponent)
+        loadComponent: () => import('./components/pages/schedule/schedule.component').then(m => m.ScheduleComponent)
       },
       {
         path: 'alerts',
-        loadComponent: () => import('./pages/alerts/alerts.component').then(m => m.AlertsComponent)
+        loadComponent: () => import('./components/pages/alerts/alerts.component').then(m => m.AlertsComponent)
       },
       {
         path: 'compliance',
-        loadComponent: () => import('./pages/compliance/compliance.component').then(m => m.ComplianceComponent)
+        loadComponent: () => import('./components/pages/compliance/compliance.component').then(m => m.ComplianceComponent)
       },
       {
         path: 'users',
-        loadComponent: () => import('./pages/users/users.component').then(m => m.UsersComponent)
+        loadComponent: () => import('./components/pages/users/users.component').then(m => m.UsersComponent)
       },
       {
         path: 'rollover',
-        loadComponent: () => import('./pages/rollover/rollover.component').then(m => m.RolloverComponent)
+        loadComponent: () => import('./components/pages/rollover/rollover.component').then(m => m.RolloverComponent)
       }
     ]
   },
