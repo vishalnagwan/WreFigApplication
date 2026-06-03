@@ -253,7 +253,7 @@ const NOTE_ROLES  = [ROLES.Admin, ROLES.FieldSupervisor, ROLES.DispatchSuperviso
   [canNote]="canNote"
   [statusCodes]="statusCodes"
   (close)="closeDetailPanel()"
-  (noteSaved)="onNoteSaved()">
+  (noteSaved)="onNoteSaved($event)">
 </app-day-detail-panel>
 
 <!-- Instruction editor -->
@@ -560,10 +560,21 @@ export class ScheduleComponent implements OnInit, OnDestroy {
     this.detailCell = null;
   }
 
-  onNoteSaved(): void {
+  onNoteSaved(hasNote: boolean): void {
     if (this.detailRow && this.detailDay !== null && this.grid) {
       const cell = this.detailRow.cells[this.detailDay];
-      if (cell) cell.hasNote = true;
+      if (cell) {
+        cell.hasNote = hasNote;
+        // When note is cleared, remove this cell from the "viewed" set so it
+        // won't accidentally suppress a future note bell on the same slot
+        if (!hasNote) {
+          const dateStr = this.toDateStr(this.year, this.month, this.detailDay);
+          const key = `${this.detailRow.employeeId}:${dateStr}`;
+          const viewed = this.getViewedSet();
+          viewed.delete(key);
+          this.saveViewedSet(viewed);
+        }
+      }
     }
   }
 

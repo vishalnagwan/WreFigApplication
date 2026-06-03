@@ -158,7 +158,8 @@ export class DayDetailPanelComponent implements OnInit {
   @Input() canNote = false;
   @Input() statusCodes: StatusCodeDto[] = [];
   @Output() close     = new EventEmitter<void>();
-  @Output() noteSaved = new EventEmitter<void>();
+  /** Emits true when a note was saved with content, false when the note was cleared */
+  @Output() noteSaved = new EventEmitter<boolean>();
 
   private scheduleSvc = inject(ScheduleService);
   private auditSvc    = inject(AuditService);
@@ -274,7 +275,7 @@ export class DayDetailPanelComponent implements OnInit {
       next: () => {
         this.saving = false;
         this.saveSuccess = true;
-        this.noteSaved.emit();
+        this.noteSaved.emit(this.noteText.trim().length > 0);
         setTimeout(() => this.saveSuccess = false, 2000);
       },
       error: () => { this.saving = false; this.saveError = true; }

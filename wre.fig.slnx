@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="wre.fig.domain/wre.fig.domain.csproj" />
+  <Project Path="wre.fig.data/wre.fig.data.csproj" />
+  <Project Path="wre.fig.services/wre.fig.services.csproj" />
+  <Project Path="wre.fig.api/wre.fig.api.csproj" />
+</Solution>

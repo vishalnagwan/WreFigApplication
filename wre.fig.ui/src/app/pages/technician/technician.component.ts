@@ -6,6 +6,7 @@ import { BranchService }             from '../../services/branch.service';
 import { EmployeeListDto, CreateEmployeeDto, EditEmployeeDto } from '../../models/employee.model';
 import { BranchListItem }            from '../../models/branch.model';
 import { RESOURCE_TYPES }            from '../../../constants';
+import { environment }               from '../../../environments/environment';
 
 type ModalMode = 'create' | 'edit';
 
@@ -17,8 +18,12 @@ type ModalMode = 'create' | 'edit';
 <div class="page-header">
   <h1>Technician Management</h1>
   <div style="display:flex;gap:.75rem;align-items:center;margin-left:auto;">
-    <input type="text" class="home-search-input" placeholder="Search..."
-           [(ngModel)]="searchText" (ngModelChange)="applyFilter()" style="width:220px;" />
+    <!-- Search with clear button -->
+    <div class="search-wrap">
+      <input type="text" class="home-search-input" placeholder="Search by name, branch, resource type…"
+             [(ngModel)]="searchText" (ngModelChange)="onSearch()" />
+      <button *ngIf="searchText" class="search-clear-btn" (click)="clearSearch()" title="Clear search">✕</button>
+    </div>
     <button class="btn-primary" (click)="openCreate()">+ New Technician</button>
   </div>
 </div>
@@ -39,7 +44,7 @@ type ModalMode = 'create' | 'edit';
     </tr>
   </thead>
   <tbody>
-    <tr *ngFor="let e of filtered">
+    <tr *ngFor="let e of pagedRows">
       <td>
         <div style="font-weight:600;">{{e.name}}</div>
         <div *ngIf="e.jobTitle" style="font-size:.75rem;color:var(--ink-light);">{{e.jobTitle}}</div>
@@ -76,9 +81,16 @@ type ModalMode = 'create' | 'edit';
     </tr>
   </tbody>
 </table>
+
+<!-- Paging footer -->
 <div class="dashboard-footer" *ngIf="!loading && employees.length > 0">
-  <span>Showing {{filtered.length}} of {{employees.length}} technicians</span>
-  <span>{{activeCount}} active · {{employees.length - activeCount}} inactive</span>
+  <span>Showing {{pageStart}}–{{pageEnd}} of {{filtered.length}} technician{{filtered.length !== 1 ? 's' : ''}}
+        ({{activeCount}} active)</span>
+  <div class="paging-controls" *ngIf="totalPages > 1">
+    <button class="btn-icon" (click)="goPage(currentPage - 1)" [disabled]="currentPage === 1">‹</button>
+    <span style="font-size:.82rem;">Page {{currentPage}} of {{totalPages}}</span>
+    <button class="btn-icon" (click)="goPage(currentPage + 1)" [disabled]="currentPage === totalPages">›</button>
+  </div>
 </div>
 
 <!-- Modal -->
@@ -198,7 +210,35 @@ type ModalMode = 'create' | 'edit';
     </div>
   </div>
 </div>
-  `
+  `,
+  styles: [`
+    .search-wrap {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+    .search-wrap .home-search-input {
+      width: 260px;
+      padding-right: 2rem;
+    }
+    .search-clear-btn {
+      position: absolute;
+      right: .5rem;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: .75rem;
+      color: var(--ink-light, #6b7280);
+      line-height: 1;
+      padding: 0;
+    }
+    .search-clear-btn:hover { color: var(--ink, #1f2937); }
+    .paging-controls {
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+    }
+  `]
 })
 export class TechnicianComponent implements OnInit {
   private empSvc    = inject(EmployeeService);
@@ -214,6 +254,10 @@ export class TechnicianComponent implements OnInit {
   modalMode: ModalMode = 'create';
   selectedEmp: EmployeeListDto | null = null;
   modalError = '';
+
+  // Paging
+  currentPage = 1;
+  readonly pageSize = environment.pageSize;
 
   allResourceTypes = RESOURCE_TYPES;
 
@@ -234,6 +278,22 @@ export class TechnicianComponent implements OnInit {
 
   get activeCount(): number { return this.employees.filter(e => e.isActive).length; }
 
+  get totalPages(): number { return Math.max(1, Math.ceil(this.filtered.length / this.pageSize)); }
+
+  get pageStart(): number {
+    if (this.filtered.length === 0) return 0;
+    return (this.currentPage - 1) * this.pageSize + 1;
+  }
+
+  get pageEnd(): number {
+    return Math.min(this.currentPage * this.pageSize, this.filtered.length);
+  }
+
+  get pagedRows(): EmployeeListDto[] {
+    const start = (this.currentPage - 1) * this.pageSize;
+    return this.filtered.slice(start, start + this.pageSize);
+  }
+
   get allTypesChecked(): boolean {
     return this.allResourceTypes.length > 0 &&
            this.form.resourceTypes.length === this.allResourceTypes.length;
@@ -248,6 +308,17 @@ export class TechnicianComponent implements OnInit {
     this.branchSvc.getBranchList().subscribe({ next: b => this.branches = b, error: () => {} });
   }
 
+  onSearch(): void {
+    this.currentPage = 1;
+    this.applyFilter();
+  }
+
+  clearSearch(): void {
+    this.searchText  = '';
+    this.currentPage = 1;
+    this.applyFilter();
+  }
+
   applyFilter(): void {
     const q = this.searchText.toLowerCase();
     this.filtered = q
@@ -258,6 +329,11 @@ export class TechnicianComponent implements OnInit {
           (e.jobTitle ?? '').toLowerCase().includes(q) ||
           e.resourceTypes.some(rt => rt.toLowerCase().includes(q)))
       : [...this.employees];
+  }
+
+  goPage(page: number): void {
+    if (page < 1 || page > this.totalPages) return;
+    this.currentPage = page;
   }
 
   openCreate(): void {

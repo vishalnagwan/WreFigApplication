@@ -24,6 +24,7 @@ export interface ComplianceDto {
 export interface BranchComplianceRowDto {
   branchId: number;
   branchName: string;
+  regionName: string;
   fillRate: number;
   daysComplete: number;
   totalWorkdays: number;

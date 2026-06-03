@@ -9,16 +9,15 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <!-- Auth middleware + Swagger only — all other packages live in sub-projects -->
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.0" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.0" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="10.0.0">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
-    </PackageReference>
-    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="10.0.0" />
-    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.0.1" />
-    <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="7.2.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\wre.fig.domain\wre.fig.domain.csproj" />
+    <ProjectReference Include="..\wre.fig.data\wre.fig.data.csproj" />
+    <ProjectReference Include="..\wre.fig.services\wre.fig.services.csproj" />
   </ItemGroup>
 
 </Project>

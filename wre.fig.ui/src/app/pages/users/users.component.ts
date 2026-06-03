@@ -5,6 +5,7 @@ import { UserService }               from '../../services/user.service';
 import { BranchService }             from '../../services/branch.service';
 import { UserListDto, CreateUserDto, EditUserDto } from '../../models/user.model';
 import { BranchListItem }            from '../../models/branch.model';
+import { environment }               from '../../../environments/environment';
 type ModalMode = 'create' | 'edit';
 
 const ALL_ROLES = [
@@ -19,7 +20,15 @@ const ALL_ROLES = [
   template: `
 <div class="page-header">
   <h1>User Management</h1>
-  <button class="btn-primary" (click)="openCreate()" style="margin-left:auto;">+ New User</button>
+  <div style="display:flex;gap:.75rem;align-items:center;margin-left:auto;">
+    <!-- Search with clear button -->
+    <div class="search-wrap">
+      <input type="text" class="home-search-input" placeholder="Search by name, email, role…"
+             [(ngModel)]="searchText" (ngModelChange)="onSearch()" />
+      <button *ngIf="searchText" class="search-clear-btn" (click)="clearSearch()" title="Clear search">✕</button>
+    </div>
+    <button class="btn-primary" (click)="openCreate()">+ New User</button>
+  </div>
 </div>
 
 <div *ngIf="loading" style="text-align:center;padding:3rem;color:var(--ink-faint);">Loading...</div>
@@ -36,13 +45,18 @@ const ALL_ROLES = [
     </tr>
   </thead>
   <tbody>
-    <tr *ngFor="let u of users">
+    <tr *ngFor="let u of pagedRows">
       <td>{{u.fullName}}</td>
       <td>{{u.email}}</td>
       <td>{{formatRole(u.role)}}</td>
       <td>
         <div class="branch-tags">
-          <span class="branch-tag" *ngFor="let n of u.branchNames">{{n}}</span>
+          <!-- Show "All" when user has all branches assigned -->
+          <span class="branch-tag" *ngIf="isAllBranches(u)">All</span>
+          <ng-container *ngIf="!isAllBranches(u)">
+            <span class="branch-tag" *ngFor="let n of u.branchNames">{{n}}</span>
+            <span *ngIf="u.branchNames.length === 0" style="color:var(--ink-faint);font-size:.75rem;">—</span>
+          </ng-container>
         </div>
       </td>
       <td>
@@ -56,11 +70,23 @@ const ALL_ROLES = [
                 *ngIf="u.isActive" [disabled]="saving">Deactivate</button>
       </td>
     </tr>
-    <tr *ngIf="users.length === 0">
-      <td colspan="6" style="text-align:center;color:var(--ink-faint);padding:2rem;">No users found.</td>
+    <tr *ngIf="filtered.length === 0">
+      <td colspan="6" style="text-align:center;color:var(--ink-faint);padding:2rem;">
+        {{users.length === 0 ? 'No users found.' : 'No results match "' + searchText + '".'}}
+      </td>
     </tr>
   </tbody>
 </table>
+
+<!-- Paging footer -->
+<div class="dashboard-footer" *ngIf="!loading && users.length > 0">
+  <span>Showing {{pageStart}}–{{pageEnd}} of {{filtered.length}} user{{filtered.length !== 1 ? 's' : ''}}</span>
+  <div class="paging-controls" *ngIf="totalPages > 1">
+    <button class="btn-icon" (click)="goPage(currentPage - 1)" [disabled]="currentPage === 1">‹</button>
+    <span style="font-size:.82rem;">Page {{currentPage}} of {{totalPages}}</span>
+    <button class="btn-icon" (click)="goPage(currentPage + 1)" [disabled]="currentPage === totalPages">›</button>
+  </div>
+</div>
 
 <!-- Modal -->
 <div class="modal-overlay" *ngIf="showModal" (click)="onOverlayClick($event)">
@@ -125,20 +151,54 @@ const ALL_ROLES = [
     </div>
   </div>
 </div>
-  `
+  `,
+  styles: [`
+    .search-wrap {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+    .search-wrap .home-search-input {
+      width: 260px;
+      padding-right: 2rem;
+    }
+    .search-clear-btn {
+      position: absolute;
+      right: .5rem;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: .75rem;
+      color: var(--ink-light, #6b7280);
+      line-height: 1;
+      padding: 0;
+    }
+    .search-clear-btn:hover { color: var(--ink, #1f2937); }
+    .paging-controls {
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+    }
+  `]
 })
 export class UsersComponent implements OnInit {
   private userSvc   = inject(UserService);
   private branchSvc = inject(BranchService);
 
   users:    UserListDto[]  = [];
+  filtered: UserListDto[]  = [];
   branches: BranchListItem[] = [];
+  searchText = '';
   loading  = true;
   saving   = false;
   showModal   = false;
   modalMode: ModalMode = 'create';
   selectedUser: UserListDto | null = null;
   modalError = '';
+
+  // Paging
+  currentPage = 1;
+  readonly pageSize = environment.pageSize;
 
   allRoles = ALL_ROLES;
 
@@ -164,12 +224,60 @@ export class UsersComponent implements OnInit {
     return UsersComponent.ROLE_LABELS[role] ?? role;
   }
 
+  /** Returns true when the user has all available branches assigned */
+  isAllBranches(u: UserListDto): boolean {
+    return this.branches.length > 0 && u.branchIds.length === this.branches.length;
+  }
+
+  get totalPages(): number { return Math.max(1, Math.ceil(this.filtered.length / this.pageSize)); }
+
+  get pageStart(): number {
+    if (this.filtered.length === 0) return 0;
+    return (this.currentPage - 1) * this.pageSize + 1;
+  }
+
+  get pageEnd(): number {
+    return Math.min(this.currentPage * this.pageSize, this.filtered.length);
+  }
+
+  get pagedRows(): UserListDto[] {
+    const start = (this.currentPage - 1) * this.pageSize;
+    return this.filtered.slice(start, start + this.pageSize);
+  }
+
   ngOnInit(): void {
     this.loadUsers();
     this.branchSvc.getBranchList().subscribe({
       next: b => this.branches = b,
       error: () => { /* silent */ }
     });
+  }
+
+  onSearch(): void {
+    this.currentPage = 1;
+    this.applyFilter();
+  }
+
+  clearSearch(): void {
+    this.searchText  = '';
+    this.currentPage = 1;
+    this.applyFilter();
+  }
+
+  applyFilter(): void {
+    const q = this.searchText.toLowerCase();
+    this.filtered = q
+      ? this.users.filter(u =>
+          u.fullName.toLowerCase().includes(q) ||
+          u.email.toLowerCase().includes(q) ||
+          this.formatRole(u.role).toLowerCase().includes(q) ||
+          u.branchNames.some(n => n.toLowerCase().includes(q)))
+      : [...this.users];
+  }
+
+  goPage(page: number): void {
+    if (page < 1 || page > this.totalPages) return;
+    this.currentPage = page;
   }
 
   openCreate(): void {
@@ -282,7 +390,7 @@ export class UsersComponent implements OnInit {
   private loadUsers(): void {
     this.loading = true;
     this.userSvc.getUsers().subscribe({
-      next: u => { this.users = u; this.loading = false; },
+      next: u => { this.users = u; this.applyFilter(); this.loading = false; },
       error: () => { this.loading = false; }
     });
   }

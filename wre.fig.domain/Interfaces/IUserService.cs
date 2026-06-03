@@ -1,0 +1,12 @@
+using Wre.Fig.Domain.Models;
+
+namespace Wre.Fig.Domain.Interfaces;
+
+public interface IUserService
+{
+    Task<List<UserListDto>> GetAllAsync();
+    Task<UserListDto?>      GetByIdAsync(string userId);
+    Task                    CreateAsync(CreateUserDto dto);
+    Task                    UpdateAsync(string id, EditUserDto dto);
+    Task                    DeleteAsync(string userId);
+}

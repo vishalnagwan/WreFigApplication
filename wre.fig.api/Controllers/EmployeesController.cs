@@ -1,10 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
-using Wre.Fig.Api.DTOs;
-using Wre.Fig.Api.Models.Entities;
-using Wre.Fig.Api.Repository.Interfaces;
-using Wre.Fig.Api.Services.Interfaces;
+using Wre.Fig.Domain.Models;
+using Wre.Fig.Domain.Interfaces;
 
 namespace Wre.Fig.Api.Controllers;
 

@@ -4,6 +4,12 @@ import { RouterModule }              from '@angular/router';
 import { BranchService }             from '../../services/branch.service';
 import { ComplianceDto, BranchComplianceRowDto } from '../../models/branch.model';
 import { FillBarComponent }          from '../../shared/fill-bar/fill-bar.component';
+import { REGION_ORDER }              from '../../../constants';
+
+interface RegionGroup {
+  name: string;
+  rows: BranchComplianceRowDto[];
+}
 
 @Component({
   selector:   'app-compliance',
@@ -38,34 +44,68 @@ import { FillBarComponent }          from '../../shared/fill-bar/fill-bar.compon
     </div>
   </div>
 
-  <!-- Table -->
-  <table class="compliance-table">
-    <thead>
-      <tr>
-        <th>Branch</th>
-        <th>Fill Rate</th>
-        <th>Days Complete</th>
-        <th>Last Updated</th>
-        <th>Status</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr *ngFor="let row of sortedRows"
-          [routerLink]="['/schedule', row.branchId]"
-          [queryParams]="{year: year, month: month}"
-          class="clickable">
-        <td>{{row.branchName}}</td>
-        <td style="min-width:120px;">
-          <app-fill-bar [pct]="row.fillRate"></app-fill-bar>
-        </td>
-        <td>{{row.daysComplete}}/{{row.totalWorkdays}}</td>
-        <td>{{row.lastUpdated ? (row.lastUpdated | date:'MM/dd') : '—'}}</td>
-        <td><span class="status-pill" [class]="row.status">{{statusLabel(row.status)}}</span></td>
-      </tr>
-    </tbody>
-  </table>
+  <!-- Regions -->
+  <div *ngFor="let region of regionGroups" class="region-group">
+
+    <!-- Region header -->
+    <div class="region-header">
+      <span class="region-name">{{region.name}}</span>
+      <span class="region-meta">{{region.rows.length}} branch{{region.rows.length !== 1 ? 'es' : ''}}</span>
+    </div>
+
+    <!-- Table per region -->
+    <table class="compliance-table">
+      <thead>
+        <tr>
+          <th>Branch</th>
+          <th>Fill Rate</th>
+          <th>Days Complete</th>
+          <th>Last Updated</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let row of region.rows"
+            [routerLink]="['/schedule', row.branchId]"
+            [queryParams]="{year: year, month: month}"
+            class="clickable">
+          <td>{{row.branchName}}</td>
+          <td style="min-width:120px;">
+            <app-fill-bar [pct]="row.fillRate"></app-fill-bar>
+          </td>
+          <td>{{row.daysComplete}}/{{row.totalWorkdays}}</td>
+          <td>{{row.lastUpdated ? (row.lastUpdated | date:'MM/dd') : '—'}}</td>
+          <td><span class="status-pill" [class]="row.status">{{statusLabel(row.status)}}</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
 </ng-container>
-  `
+  `,
+  styles: [`
+    .region-group {
+      margin-bottom: 1.5rem;
+    }
+    .region-header {
+      display: flex;
+      align-items: center;
+      gap: .75rem;
+      padding: .5rem 0 .4rem;
+      border-bottom: 2px solid var(--accent, #6d28d9);
+      margin-bottom: .5rem;
+    }
+    .region-name {
+      font-size: .95rem;
+      font-weight: 700;
+      color: var(--accent, #6d28d9);
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+    .region-meta {
+      font-size: .75rem;
+      color: var(--ink-light, #6b7280);
+    }
+  `]
 })
 export class ComplianceComponent implements OnInit {
   private branchSvc = inject(BranchService);
@@ -90,8 +130,36 @@ export class ComplianceComponent implements OnInit {
     return `${months[this.month - 1]} ${this.year}`;
   }
 
-  get sortedRows(): BranchComplianceRowDto[] {
-    return [...(this.compliance?.rows ?? [])].sort((a, b) => a.fillRate - b.fillRate);
+  get regionGroups(): RegionGroup[] {
+    const rows = this.compliance?.rows ?? [];
+
+    // Build a map: regionName → sorted rows (by fillRate ascending)
+    const map = new Map<string, BranchComplianceRowDto[]>();
+    for (const row of rows) {
+      const region = row.regionName || 'Other';
+      if (!map.has(region)) map.set(region, []);
+      map.get(region)!.push(row);
+    }
+
+    // Sort rows within each region by fill rate ascending
+    for (const regionRows of map.values()) {
+      regionRows.sort((a, b) => a.fillRate - b.fillRate);
+    }
+
+    // Order regions by REGION_ORDER, append any unknown regions at end
+    const groups: RegionGroup[] = [];
+    for (const regionName of REGION_ORDER) {
+      if (map.has(regionName)) {
+        groups.push({ name: regionName, rows: map.get(regionName)! });
+        map.delete(regionName);
+      }
+    }
+    // Append any regions not in REGION_ORDER
+    for (const [name, regionRows] of map.entries()) {
+      groups.push({ name, rows: regionRows });
+    }
+
+    return groups;
   }
 
   statusLabel(status: string): string {
