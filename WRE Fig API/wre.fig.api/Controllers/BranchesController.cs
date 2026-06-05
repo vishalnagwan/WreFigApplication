@@ -24,7 +24,7 @@ public class BranchesController(IBranchService branchSvc) : ControllerBase
         return Ok(result);
     }
 
-    // Legacy alias kept for backward compat
+    // Legacy alias kept for backward compatibility
     [HttpGet]
     public async Task<IActionResult> GetSummariesLegacy([FromQuery] int year, [FromQuery] int month)
     {
