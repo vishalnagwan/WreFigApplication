@@ -1,4 +1,4 @@
-namespace Wre.Fig.Domain;
+namespace WRE.Cloud.Fig.Domain;
 
 /// <summary>
 /// Application-wide constants shared across all layers.

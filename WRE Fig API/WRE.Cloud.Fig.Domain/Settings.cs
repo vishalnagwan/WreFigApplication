@@ -1,4 +1,4 @@
-namespace Wre.Fig.Domain;
+namespace WRE.Cloud.Fig.Domain;
 
 /// <summary>
 /// Strongly-typed configuration binding for appsettings.json sections.

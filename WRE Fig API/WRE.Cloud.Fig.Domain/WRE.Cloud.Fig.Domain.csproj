@@ -4,8 +4,8 @@
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <RootNamespace>Wre.Fig.Domain</RootNamespace>
-    <AssemblyName>wre.fig.domain</AssemblyName>
+    <RootNamespace>WRE.Cloud.Fig.Domain</RootNamespace>
+    <AssemblyName>WRE.Cloud.Fig.Domain</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>

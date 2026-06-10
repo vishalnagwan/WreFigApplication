@@ -1,4 +1,4 @@
-namespace Wre.Fig.Domain.Models;
+namespace WRE.Cloud.Fig.Domain.Models;
 
 public class ScheduleEntry
 {

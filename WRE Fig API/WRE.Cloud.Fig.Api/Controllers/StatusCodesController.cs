@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Wre.Fig.Domain.Interfaces;
+using WRE.Cloud.Fig.Domain.Interfaces;
 
-namespace Wre.Fig.Api.Controllers;
+namespace WRE.Cloud.Fig.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]

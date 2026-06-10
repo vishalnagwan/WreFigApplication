@@ -1,10 +1,10 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Wre.Fig.Data;
-using Wre.Fig.Domain.Models;
-using Wre.Fig.Domain.Interfaces;
+using WRE.Cloud.Fig.Data;
+using WRE.Cloud.Fig.Domain.Models;
+using WRE.Cloud.Fig.Domain.Interfaces;
 
-namespace Wre.Fig.Data.Repositories;
+namespace WRE.Cloud.Fig.Data.Repositories;
 
 public class AuditRepository(AppDbContext db, UserManager<AppUser> userMgr) : IAuditRepository
 {

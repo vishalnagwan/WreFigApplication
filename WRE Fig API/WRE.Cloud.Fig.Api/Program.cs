@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
-using Wre.Fig.Api.Infrastructure;
-using Wre.Fig.Api.Hubs;
-using Wre.Fig.Data;
+using WRE.Cloud.Fig.Api.Infrastructure;
+using WRE.Cloud.Fig.Api.Hubs;
+using WRE.Cloud.Fig.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 

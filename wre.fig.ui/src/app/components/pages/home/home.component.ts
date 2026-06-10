@@ -152,7 +152,9 @@ export class HomeComponent implements OnInit {
         user?.fullName?.toLowerCase() === 'admin user') {
       return 'Admin Dashboard';
     }
-    const role = user?.role;
+    // Roles are stored in full form ("wre.fig.Admin") — strip the prefix
+    // so the map works for both full and legacy short names.
+    const role = (user?.role ?? '').replace(/^wre\.fig\./, '');
     const map: Record<string, string> = {
       Admin:              'Admin Dashboard',
       FieldSupervisor:    'Field Supervisor Dashboard',

@@ -1,9 +1,9 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using Wre.Fig.Domain.Models;
+using WRE.Cloud.Fig.Domain.Models;
 
-namespace Wre.Fig.Data;
+namespace WRE.Cloud.Fig.Data;
 
 public static class DataSeeder
 {

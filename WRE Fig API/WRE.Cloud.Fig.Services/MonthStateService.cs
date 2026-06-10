@@ -1,9 +1,9 @@
 using Microsoft.EntityFrameworkCore;
-using Wre.Fig.Data;
-using Wre.Fig.Domain.Models;
-using Wre.Fig.Domain.Interfaces;
+using WRE.Cloud.Fig.Data;
+using WRE.Cloud.Fig.Domain.Models;
+using WRE.Cloud.Fig.Domain.Interfaces;
 
-namespace Wre.Fig.Services;
+namespace WRE.Cloud.Fig.Services;
 
 public class MonthStateService(AppDbContext db, IScheduleRepository scheduleRepo) : IMonthStateService
 {

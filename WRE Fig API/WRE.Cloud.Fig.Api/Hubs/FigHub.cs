@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 
-namespace Wre.Fig.Api.Hubs;
+namespace WRE.Cloud.Fig.Api.Hubs;
 
 /// <summary>
 /// Real-time hub for:

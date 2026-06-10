@@ -1,6 +1,6 @@
 <Solution>
-  <Project Path="wre.fig.domain/wre.fig.domain.csproj" />
-  <Project Path="wre.fig.data/wre.fig.data.csproj" />
-  <Project Path="wre.fig.services/wre.fig.services.csproj" />
-  <Project Path="wre.fig.api/wre.fig.api.csproj" />
+  <Project Path="WRE.Cloud.Fig.Domain/WRE.Cloud.Fig.Domain.csproj" />
+  <Project Path="WRE.Cloud.Fig.Data/WRE.Cloud.Fig.Data.csproj" />
+  <Project Path="WRE.Cloud.Fig.Services/WRE.Cloud.Fig.Services.csproj" />
+  <Project Path="WRE.Cloud.Fig.Api/WRE.Cloud.Fig.Api.csproj" />
 </Solution>

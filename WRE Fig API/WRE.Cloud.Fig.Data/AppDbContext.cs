@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using Wre.Fig.Domain.Models;
+using WRE.Cloud.Fig.Domain.Models;
 
-namespace Wre.Fig.Data;
+namespace WRE.Cloud.Fig.Data;
 
 public class AppDbContext : IdentityDbContext<AppUser>
 {

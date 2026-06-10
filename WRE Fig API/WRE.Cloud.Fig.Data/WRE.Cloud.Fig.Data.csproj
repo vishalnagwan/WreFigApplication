@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
-    <ProjectReference Include="..\wre.fig.domain\wre.fig.domain.csproj" />
+    <ProjectReference Include="..\WRE.Cloud.Fig.Domain\WRE.Cloud.Fig.Domain.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -19,8 +19,8 @@
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <RootNamespace>Wre.Fig.Data</RootNamespace>
-    <AssemblyName>wre.fig.data</AssemblyName>
+    <RootNamespace>WRE.Cloud.Fig.Data</RootNamespace>
+    <AssemblyName>WRE.Cloud.Fig.Data</AssemblyName>
   </PropertyGroup>
 
 </Project>

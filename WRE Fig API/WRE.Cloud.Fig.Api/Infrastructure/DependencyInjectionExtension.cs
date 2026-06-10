@@ -3,13 +3,13 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
-using Wre.Fig.Data;
-using Wre.Fig.Domain.Models;
-using Wre.Fig.Domain.Interfaces;
-using Wre.Fig.Data.Repositories;
-using Wre.Fig.Services;
+using WRE.Cloud.Fig.Data;
+using WRE.Cloud.Fig.Domain.Models;
+using WRE.Cloud.Fig.Domain.Interfaces;
+using WRE.Cloud.Fig.Data.Repositories;
+using WRE.Cloud.Fig.Services;
 
-namespace Wre.Fig.Api.Infrastructure;
+namespace WRE.Cloud.Fig.Api.Infrastructure;
 
 public static class DependencyInjectionExtension
 {

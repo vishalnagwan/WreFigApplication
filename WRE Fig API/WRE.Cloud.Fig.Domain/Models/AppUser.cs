@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Identity;
 
-namespace Wre.Fig.Domain.Models;
+namespace WRE.Cloud.Fig.Domain.Models;
 
 public class AppUser : IdentityUser
 {

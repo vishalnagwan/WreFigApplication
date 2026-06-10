@@ -1,6 +1,6 @@
-using Wre.Fig.Domain.Models;
+using WRE.Cloud.Fig.Domain.Models;
 
-namespace Wre.Fig.Domain.Interfaces;
+namespace WRE.Cloud.Fig.Domain.Interfaces;
 
 public interface IFeedbackRepository
 {
