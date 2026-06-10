@@ -2,16 +2,17 @@ namespace Wre.Fig.Domain.Models;
 
 public static class AppRoles
 {
-    // ── Role constants ──────────────────────────────────────────────────────
-    public const string Admin              = "Admin";
-    public const string FieldSupervisor    = "FieldSupervisor";
-    public const string DispatchSupervisor = "DispatchSupervisor";
-    public const string Planner            = "Planner";
-    public const string Dispatcher         = "Dispatcher";
-    public const string OtherEmployee      = "OtherEmployee";
+    // ── Role constants — must match Azure AD App Role values and ROLES constant in Angular ──
+    public const string Admin              = "wre.fig.Admin";
+    public const string FieldSupervisor    = "wre.fig.FieldSupervisor";
+    public const string DispatchSupervisor = "wre.fig.DispatchSupervisor";
+    public const string Planner            = "wre.fig.Planner";
+    public const string Dispatcher         = "wre.fig.Dispatcher";
+    public const string OtherEmployee      = "wre.fig.OtherEmployee";
+    public const string Technician         = "wre.fig.Technician";
 
     public static readonly string[] All =
-        [Admin, FieldSupervisor, DispatchSupervisor, Planner, Dispatcher, OtherEmployee];
+        [Admin, FieldSupervisor, DispatchSupervisor, Planner, Dispatcher, OtherEmployee, Technician];
 
     // ── Feature access arrays (used in service/repo logic) ─────────────────
 

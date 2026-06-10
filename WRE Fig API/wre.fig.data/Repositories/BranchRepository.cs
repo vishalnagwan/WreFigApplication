@@ -11,9 +11,9 @@ public class BranchRepository(AppDbContext db, UserManager<AppUser> userManager)
     private const string EmptyStatusCode = "\u2014";
     private const string MojibakeEmptyStatusCode = "\u00e2\u20ac\u201d";
 
-    public async Task<List<BranchSummaryDto>> GetSummariesAsync(int year, int month, string? userId)
+    public async Task<List<BranchSummaryDto>> GetSummariesAsync(int year, int month, string? userId, string userRole, string? userEmail)
     {
-        var allowedBranchIds = await GetAllowedBranchIdsAsync(userId);
+        var allowedBranchIds = await GetAllowedBranchIdsAsync(userId, userRole, userEmail);
 
         var branches = await db.Branches
             .Include(b => b.Region)
@@ -152,9 +152,9 @@ public class BranchRepository(AppDbContext db, UserManager<AppUser> userManager)
             .ToListAsync();
     }
 
-    public async Task<ComplianceDto> GetComplianceAsync(int year, int month, string? userId)
+    public async Task<ComplianceDto> GetComplianceAsync(int year, int month, string? userId, string userRole, string? userEmail)
     {
-        var allowedBranchIds = await GetAllowedBranchIdsAsync(userId);
+        var allowedBranchIds = await GetAllowedBranchIdsAsync(userId, userRole, userEmail);
         var daysInMonth      = DateTime.DaysInMonth(year, month);
 
         var workdayDates = Enumerable.Range(1, daysInMonth)
@@ -249,18 +249,30 @@ public class BranchRepository(AppDbContext db, UserManager<AppUser> userManager)
         };
     }
 
-    private async Task<HashSet<int>?> GetAllowedBranchIdsAsync(string? userId)
+    private async Task<HashSet<int>?> GetAllowedBranchIdsAsync(
+        string? userId, string userRole, string? userEmail)
     {
-        if (userId is null) return null;
+        // Check the JWT role directly — Admin sees all branches without any DB lookup.
+        // This works for both form-based and MSAL users because BuildTokenResponseAsync
+        // and BuildMsalTokenResponse both embed the full "wre.fig.*" role in the FIG JWT.
+        if (AppRoles.GlobalViewRoles.Contains(userRole)) return null;
 
+        if (userId is null) return [];
+
+        // Try Identity GUID lookup first (works for form-based login).
         var user = await userManager.FindByIdAsync(userId);
-        if (user is null) return null;
 
-        var roles = await userManager.GetRolesAsync(user);
-        if (roles.Any(AppRoles.GlobalViewRoles.Contains)) return null;
+        // MSAL users have Azure OIDs in their FIG JWT, not Identity GUIDs.
+        // Fall back to email lookup so they inherit branch assignments from a
+        // matching Identity record (the form-based account for the same person).
+        if (user is null && !string.IsNullOrEmpty(userEmail))
+            user = await userManager.FindByEmailAsync(userEmail);
+
+        // No matching DB record — no branch assignments available.
+        if (user is null) return [];
 
         var ids = await db.UserBranches
-            .Where(ub => ub.UserId == userId)
+            .Where(ub => ub.UserId == user.Id)
             .Select(ub => ub.BranchId)
             .ToListAsync();
 

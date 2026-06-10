@@ -32,7 +32,13 @@ export const jwtInterceptor: HttpInterceptorFn = (
         }));
       }
       if (err.status === 401) {
-        auth.logout();
+        // Clear local session state only.
+        // Do NOT call auth.logout() here — in MSAL mode that calls
+        // msal.logoutRedirect() which triggers a full Azure logout, which
+        // redirects back to the app unauthenticated, which causes another 401,
+        // which causes another logoutRedirect → infinite loop.
+        localStorage.removeItem('fig_token');
+        localStorage.removeItem('fig_user');
         router.navigate(['/login']);
       }
       return throwError(() => err);

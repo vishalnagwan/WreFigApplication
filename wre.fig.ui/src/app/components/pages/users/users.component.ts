@@ -6,11 +6,12 @@ import { BranchService }             from '../../../services/branch.service';
 import { UserListDto, CreateUserDto, EditUserDto } from '../../../models/user.model';
 import { BranchListItem }            from '../../../models/branch.model';
 import { environment }               from '../../../../environments/environment';
+import { ROLES }                     from '../../../constant';
 type ModalMode = 'create' | 'edit';
 
 const ALL_ROLES = [
-  'Admin','FieldSupervisor','DispatchSupervisor',
-  'Planner','Dispatcher','OtherEmployee'
+  ROLES.Admin, ROLES.FieldSupervisor, ROLES.DispatchSupervisor,
+  ROLES.Planner, ROLES.Dispatcher, ROLES.OtherEmployee
 ];
 
 @Component({
@@ -211,17 +212,11 @@ export class UsersComponent implements OnInit {
     isActive:  true
   };
 
-  private static readonly ROLE_LABELS: Record<string, string> = {
-    Admin:              'Admin',
-    FieldSupervisor:    'Field Supervisor',
-    DispatchSupervisor: 'Dispatch Supervisor',
-    Planner:            'Planner',
-    Dispatcher:         'Dispatcher',
-    OtherEmployee:      'Other Employee'
-  };
-
+  /** "wre.fig.FieldSupervisor" or legacy "FieldSupervisor" → "Field Supervisor" */
   formatRole(role: string): string {
-    return UsersComponent.ROLE_LABELS[role] ?? role;
+    return (role ?? '')
+      .replace(/^wre\.fig\./, '')
+      .replace(/([a-z])([A-Z])/g, '$1 $2');
   }
 
   /** Returns true when the user has all available branches assigned */

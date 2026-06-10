@@ -34,23 +34,28 @@ public class AuditRepository(AppDbContext db, UserManager<AppUser> userMgr) : IA
     ///   - Admin / Planner / Dispatcher → all recent alerts
     ///   - FieldSupervisor / DispatchSupervisor → only alerts for their assigned branches
     /// </summary>
-    public async Task<List<AuditLogDto>> GetForUserAsync(string userId, int take = 100)
+    public async Task<List<AuditLogDto>> GetForUserAsync(
+        string userId, string userRole, string? userEmail, int take = 100)
     {
         if (string.IsNullOrEmpty(userId))
             return await GetRecentAsync(take);
 
-        var user = await userMgr.FindByIdAsync(userId);
-        if (user is null) return [];
-
-        var roles = await userMgr.GetRolesAsync(user);
-
-        // Global-view roles see every alert
-        if (roles.Any(AppRoles.GlobalAlertRoles.Contains))
+        // Role comes from the FIG JWT — valid for both form-based and MSAL logins.
+        // Admin sees every alert with no DB lookup.
+        if (AppRoles.GlobalAlertRoles.Contains(userRole))
             return await GetRecentAsync(take);
 
-        // Branch-scoped users: get their assigned branch IDs
+        // Branch-scoped roles: resolve the Identity record to get branch assignments.
+        // MSAL users carry an Azure OID as userId, not an Identity GUID, so fall back
+        // to email lookup — same pattern as BranchRepository.GetAllowedBranchIdsAsync.
+        var user = await userMgr.FindByIdAsync(userId);
+        if (user is null && !string.IsNullOrEmpty(userEmail))
+            user = await userMgr.FindByEmailAsync(userEmail);
+
+        if (user is null) return [];
+
         var branchIds = await db.UserBranches
-            .Where(ub => ub.UserId == userId)
+            .Where(ub => ub.UserId == user.Id)
             .Select(ub => ub.BranchId)
             .ToListAsync();
 

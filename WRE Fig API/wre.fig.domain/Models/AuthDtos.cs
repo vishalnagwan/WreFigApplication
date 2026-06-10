@@ -15,3 +15,9 @@ public class LoginResponseDto
     public string   Role      { get; set; } = string.Empty;
     public DateTime ExpiresAt { get; set; }
 }
+
+// MSAL: Angular sends this after getting an Azure access token
+public class MicrosoftLoginRequestDto
+{
+    public string AccessToken { get; set; } = string.Empty;
+}

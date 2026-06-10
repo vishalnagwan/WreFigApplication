@@ -52,7 +52,7 @@ const PAGE_MAP: Record<string, string> = {
     <div class="topbar-right">
       <button class="btn-ghost btn-sm" (click)="showFeedbackPanel = true">Feedback</button>
       <div class="topbar-user">
-        <span>{{userName}}</span>
+        <span>{{userName}} ({{userRoleLabel}})</span>
         <button class="btn-ghost btn-sm" (click)="logout()">Sign out</button>
       </div>
     </div>
@@ -86,6 +86,14 @@ export class LayoutComponent implements OnInit {
 
   get userName(): string {
     return this.auth.getUserFullName();
+  }
+
+  /** Friendly role label: "wre.fig.FieldSupervisor" → "Field Supervisor" */
+  get userRoleLabel(): string {
+    const role = this.auth.getUserRole() ?? '';
+    return role
+      .replace(/^wre\.fig\./, '')
+      .replace(/([a-z])([A-Z])/g, '$1 $2');
   }
 
   get isPlannerDashboard(): boolean {

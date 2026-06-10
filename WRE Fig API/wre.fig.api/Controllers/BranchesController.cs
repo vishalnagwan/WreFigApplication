@@ -11,16 +11,17 @@ namespace Wre.Fig.Api.Controllers;
 [Authorize]
 public class BranchesController(IBranchService branchSvc) : ControllerBase
 {
-    // Reads the authenticated user's ID from the JWT — returns null for anonymous callers.
-    private string? CurrentUserId =>
-        User.FindFirstValue(ClaimTypes.NameIdentifier);
+    // Claims from the FIG JWT — present for both form-based and MSAL logins.
+    private string? CurrentUserId    => User.FindFirstValue(ClaimTypes.NameIdentifier);
+    private string  CurrentUserRole  => User.FindFirstValue(ClaimTypes.Role)  ?? string.Empty;
+    private string? CurrentUserEmail => User.FindFirstValue(ClaimTypes.Email);
 
     [HttpGet("summaries")]
     public async Task<IActionResult> GetSummaries([FromQuery] int year, [FromQuery] int month)
     {
         if (year == 0) year = DateTime.Now.Year;
         if (month == 0) month = DateTime.Now.Month;
-        var result = await branchSvc.GetSummariesAsync(year, month, CurrentUserId);
+        var result = await branchSvc.GetSummariesAsync(year, month, CurrentUserId, CurrentUserRole, CurrentUserEmail);
         return Ok(result);
     }
 
@@ -30,7 +31,7 @@ public class BranchesController(IBranchService branchSvc) : ControllerBase
     {
         if (year == 0) year = DateTime.Now.Year;
         if (month == 0) month = DateTime.Now.Month;
-        var result = await branchSvc.GetSummariesAsync(year, month, CurrentUserId);
+        var result = await branchSvc.GetSummariesAsync(year, month, CurrentUserId, CurrentUserRole, CurrentUserEmail);
         return Ok(result);
     }
 
@@ -39,7 +40,7 @@ public class BranchesController(IBranchService branchSvc) : ControllerBase
     {
         if (year == 0) year = DateTime.Now.Year;
         if (month == 0) month = DateTime.Now.Month;
-        var all    = await branchSvc.GetSummariesAsync(year, month, CurrentUserId);
+        var all    = await branchSvc.GetSummariesAsync(year, month, CurrentUserId, CurrentUserRole, CurrentUserEmail);
         var result = all.FirstOrDefault(b => b.BranchId == branchId);
         return result is null ? NotFound() : Ok(result);
     }
@@ -64,7 +65,7 @@ public class BranchesController(IBranchService branchSvc) : ControllerBase
     {
         if (year == 0) year = DateTime.Now.Year;
         if (month == 0) month = DateTime.Now.Month;
-        var result = await branchSvc.GetComplianceAsync(year, month, CurrentUserId);
+        var result = await branchSvc.GetComplianceAsync(year, month, CurrentUserId, CurrentUserRole, CurrentUserEmail);
         return Ok(result);
     }
 }

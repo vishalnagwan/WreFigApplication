@@ -2,12 +2,13 @@ export const APP_TITLE      = 'FIG';
 export const APP_FULL_TITLE = 'FIG - Field Information Guide';
 
 export const ROLES = {
-  Admin:              'Admin',
-  FieldSupervisor:    'FieldSupervisor',
-  DispatchSupervisor: 'DispatchSupervisor',
-  Planner:            'Planner',
-  Dispatcher:         'Dispatcher',
-  OtherEmployee:      'OtherEmployee'
+  Admin:              'wre.fig.Admin',
+  FieldSupervisor:    'wre.fig.FieldSupervisor',
+  DispatchSupervisor: 'wre.fig.DispatchSupervisor',
+  Planner:            'wre.fig.Planner',
+  Dispatcher:         'wre.fig.Dispatcher',
+  OtherEmployee:      'wre.fig.OtherEmployee',
+  Technician:         'wre.fig.Technician',
 } as const;
 
 export const EDIT_ROLES = [

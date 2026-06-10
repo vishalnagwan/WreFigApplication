@@ -1121,6 +1121,54 @@ button:disabled { opacity: .45; cursor: not-allowed; }
 }
 .login-error { color: var(--red-urgent); font-size: .82rem; margin-bottom: .5rem; }
 
+// Microsoft sign-in button
+.btn-microsoft {
+  display:         flex;
+  align-items:     center;
+  justify-content: center;
+  gap:             .65rem;
+  width:           100%;
+  padding:         .6rem 1rem;
+  font-size:       .9rem;
+  font-weight:     600;
+  color:           var(--ink);
+  background:      var(--paper);
+  border:          1px solid var(--border);
+  border-radius:   6px;
+  cursor:          pointer;
+  transition:      background .15s, border-color .15s;
+  margin-bottom:   1rem;
+
+  &:hover:not(:disabled) {
+    background:    var(--paper-warm);
+    border-color:  #aaa;
+  }
+
+  &:disabled {
+    opacity: .6;
+    cursor:  not-allowed;
+  }
+}
+
+// "or" divider between Microsoft and form login
+.login-divider {
+  display:         flex;
+  align-items:     center;
+  gap:             .75rem;
+  margin:          .25rem 0 1rem;
+  color:           var(--ink-faint);
+  font-size:       .78rem;
+  text-transform:  uppercase;
+  letter-spacing:  .4px;
+
+  &::before,
+  &::after {
+    content:    '';
+    flex:       1;
+    height:     1px;
+    background: var(--border);
+  }
+}
 // ── Branch external links (Dialpad, Fleetio) ──────────────────────────────
 .branch-ext-link {
   gap: .3rem;
