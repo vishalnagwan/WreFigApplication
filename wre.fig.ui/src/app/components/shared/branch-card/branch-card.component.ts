@@ -21,18 +21,13 @@ import { FillBarComponent } from '../fill-bar/fill-bar.component';
       <span class="bell-icon active" title="Has unviewed notes">🔔</span>
     }
   </div>
-  <div class="branch-card-name">{{summary.state}} — {{summary.branchName}}</div>
-  @if (!summary.isAcquisition && summary.driverCount) {
-    <div class="branch-card-drivers">
-      {{summary.driverCount}} driver{{summary.driverCount === 1 ? '' : 's'}}
-    </div>
-  }
+  <div class="branch-card-name">{{summary.state}} - {{summary.city}}</div>
   @if (!summary.isAcquisition) {
-    <div class="branch-card-updated" [class.stale]="isStale">
+    <div class="branch-card-updated">
       @if (summary.lastUpdated) {
-        Updated {{summary.lastUpdated | date:'MMM d'}}
+        Updated {{summary.lastUpdated | date:'MMM d, y'}}
       } @else {
-        Never updated
+        No Update
       }
     </div>
   }
@@ -63,12 +58,5 @@ export class BranchCardComponent {
       red:   'Needs attention'
     };
     return map[this.summary?.status] ?? this.summary?.status ?? '';
-  }
-
-  /** True when the FIG hasn't been updated in 7+ days (feedback #1). */
-  get isStale(): boolean {
-    if (!this.summary?.lastUpdated) return true;
-    const days = (Date.now() - new Date(this.summary.lastUpdated).getTime()) / 86_400_000;
-    return days >= 7;
   }
 }

@@ -40,6 +40,12 @@ export interface StatusCodeDto {
   sortOrder: number;
   showInPaintBar: boolean;
   showInPicker: boolean;
+  // Status-group fields (null when the code is ungrouped) — drive the
+  // working / not-working / on-call grouping in the schedule paint bar + legend.
+  groupKey:        string | null;
+  groupLabel:      string | null;
+  groupColorClass: string | null;
+  groupSortOrder:  number | null;
 }
 
 export interface NoteResponse {

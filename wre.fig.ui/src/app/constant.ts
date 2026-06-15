@@ -32,7 +32,7 @@ export const REGION_ORDER = ['North', 'Mid-South', 'Mid-Atlantic', 'South'];
 
 export const STATUS_CODES = ['WA', 'WP', 'O', 'CO', 'OC', 'TR', 'HD', 'WX'] as const;
 
-// ── Feedback ────────────────────────────────────────────────────────────────
+// ── Feedback 
 
 export const FEEDBACK_CATEGORIES: Record<string, string[]> = {
   Home: [

@@ -36,7 +36,7 @@ const NOTE_ROLES  = [ROLES.Admin, ROLES.FieldSupervisor, ROLES.DispatchSuperviso
 <div class="branch-header">
   <div class="branch-header-left">
     <a routerLink="/" class="btn-ghost btn-sm">← All Field Offices</a>
-    <h2>{{summary ? summary.state + ' — ' + summary.branchName : 'Loading...'}}</h2>
+    <h2>{{headerTitle}}</h2>
     @if (summary) {
       <span class="status-pill" [class]="summary!.status || ''">
         {{statusLabel}}
@@ -164,13 +164,21 @@ const NOTE_ROLES  = [ROLES.Admin, ROLES.FieldSupervisor, ROLES.DispatchSuperviso
 <!-- Paint toolbar -->
 @if (canEdit) {
   <div class="paint-toolbar">
-    @for (sc of paintCodes; track sc) {
-      <app-shift-chip
-        [code]="sc.code"
-        [statusCodes]="statusCodes"
-        [class.active]="paintMode === sc.code"
-        (click)="setPaintMode(sc.code)">
-      </app-shift-chip>
+    <span class="paint-toolbar-label">APPLY STATUS:</span>
+    @for (g of paintGroups; track g.key) {
+      <div class="status-group {{g.cls}}">
+        <span class="status-group-label">{{g.label}} —</span>
+        <div class="status-group-chips">
+          @for (sc of g.items; track sc) {
+            <app-shift-chip
+              [code]="sc.code"
+              [statusCodes]="statusCodes"
+              [class.active]="paintMode === sc.code"
+              (click)="setPaintMode(sc.code)">
+            </app-shift-chip>
+          }
+        </div>
+      </div>
     }
     <button class="btn-ghost btn-sm" [class.active]="paintMode === 'clear'" (click)="setPaintMode('clear')">Clear</button>
     @if (selectedRows.size > 0) {
@@ -255,14 +263,19 @@ const NOTE_ROLES  = [ROLES.Admin, ROLES.FieldSupervisor, ROLES.DispatchSuperviso
   </div>
 }
 
-<!-- Legend -->
-@if (legendCodes.length > 0) {
-  <div class="legend-strip">
-    @for (sc of legendCodes; track sc) {
-      <span class="legend-item">
-        <span class="legend-chip {{sc.cssClass}}"></span>
-        <span>{{sc.label}}</span>
-      </span>
+<!-- Legend — grouped working / on-call / not-working (feedback #9) -->
+@if (legendGroups.length > 0) {
+  <div class="legend-groups">
+    @for (g of legendGroups; track g.key) {
+      <div class="legend-group {{g.cls}}">
+        <span class="legend-group-title">{{g.label}} —</span>
+        @for (sc of g.items; track sc) {
+          <span class="legend-item-inline">
+            <span class="legend-chip {{sc.cssClass}}">{{sc.code}}</span>
+            <span class="legend-desc">{{sc.label}}</span>
+          </span>
+        }
+      </div>
     }
   </div>
 }
@@ -438,6 +451,12 @@ export class ScheduleComponent implements OnInit, OnDestroy {
     return map[this.summary?.status ?? ''] ?? (this.summary?.status ?? '');
   }
 
+  /** "NJ - Bayville" — composed from the atomic state + city fields (feedback #4). */
+  get headerTitle(): string {
+    if (!this.summary) return 'Loading...';
+    return `${this.summary.state} - ${this.summary.city}`;
+  }
+
   get paintCodes(): StatusCodeDto[] {
     return this.statusCodes.filter(s => s.showInPaintBar);
   }
@@ -445,6 +464,31 @@ export class ScheduleComponent implements OnInit, OnDestroy {
   get legendCodes(): StatusCodeDto[] {
     return this.statusCodes.filter(s => s.showInPicker);
   }
+
+  // Status grouping (June 4 feedback #9, per WRE VP design): chips keep their
+  // distinct colors but are organised into labelled, bordered groups. Group
+  // membership, labels, colors and order are defined in the FIG_StatusGroups
+  // table and arrive on each status code — no hardcoded mapping here.
+  private buildGroups(codes: StatusCodeDto[]) {
+    const groups = new Map<string, { key: string; label: string; cls: string; order: number; items: StatusCodeDto[] }>();
+    for (const sc of codes) {
+      if (!sc.groupKey) continue;   // ungrouped codes are not shown in groups
+      let g = groups.get(sc.groupKey);
+      if (!g) {
+        g = { key: sc.groupKey, label: sc.groupLabel ?? sc.groupKey,
+              cls: sc.groupColorClass ?? '', order: sc.groupSortOrder ?? 0, items: [] };
+        groups.set(sc.groupKey, g);
+      }
+      g.items.push(sc);
+    }
+    return [...groups.values()].sort((a, b) => a.order - b.order);
+  }
+
+  /** Paint-bar chips organised into the configured status groups. */
+  get paintGroups() { return this.buildGroups(this.paintCodes); }
+
+  /** Legend organised into the configured status groups. */
+  get legendGroups() { return this.buildGroups(this.legendCodes); }
 
   resourceDisplay(raw: string | null | undefined): string {
     if (!raw) return '—';

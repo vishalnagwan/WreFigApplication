@@ -12,17 +12,17 @@
   --topbar-h: 64px;
   --radius: 4px;
 
-  // Status colors — grouped by working vs not-working (June 4 feedback #9).
-  // WORKING family → green hues (WA, WP, TR).
-  --wa-bg: #bbf7d0; --wa-fg: #14532d;   // Working AM  (deep green)
-  --wp-bg: #dcfce7; --wp-fg: #166534;   // Working PM  (light green)
-  --tr-bg: #99f6e4; --tr-fg: #115e59;   // Training    (teal-green; engaged day)
-  // NOT-WORKING family → slate/gray hues (O/PTO, CO, OC, HD, WX, blank).
-  --o-bg:  #cbd5e1; --o-fg:  #1e293b;   // Off / PTO   (darker slate)
-  --co-bg: #f1f5f9; --co-fg: #475569;   // Call-Out    (light slate)
-  --oc-bg: #e2e8f0; --oc-fg: #334155;   // On-Call     (slate)
-  --hd-bg: #e5e7eb; --hd-fg: #4b5563;   // Holiday     (gray)
-  --wx-bg: #f3f4f6; --wx-fg: #6b7280;   // Weather     (light gray)
+  // Status colors — distinct per-status hues. Working/not-working/on-call
+  // grouping is conveyed by the bordered groups in the paint bar + legend
+  // (June 4 feedback #9, per WRE VP design).
+  --wa-bg: #ede9fe; --wa-fg: #5b21b6;
+  --wp-bg: #fce7f3; --wp-fg: #9d174d;
+  --o-bg:  #1e1e2e; --o-fg:  #d4d4d4;
+  --co-bg: #fef9c3; --co-fg: #854d0e;
+  --oc-bg: #dcfce7; --oc-fg: #166534;
+  --tr-bg: #fee2e2; --tr-fg: #991b1b;
+  --hd-bg: #ffe4e6; --hd-fg: #9f1239;
+  --wx-bg: #ffedd5; --wx-fg: #9a3412;
   --blank-bg: #f8fafc; --blank-fg: #94a3b8;
 
   // Urgency
@@ -437,7 +437,6 @@ button:disabled { opacity: .45; cursor: not-allowed; }
 .branch-card-loc { font-size: .75rem; color: var(--ink-light); margin-bottom: .5rem; }
 .branch-card-drivers { font-size: .75rem; color: var(--ink-light); margin-bottom: .35rem; }
 .branch-card-updated { font-size: .7rem; color: var(--ink-faint); margin-bottom: .35rem; }
-.branch-card-updated.stale { color: #b45309; font-weight: 600; }
 .branch-card-acq-label {
   font-size: .7rem;
   font-weight: 700;
@@ -627,19 +626,51 @@ button:disabled { opacity: .45; cursor: not-allowed; }
 .paint-toolbar .shift-chip { cursor: pointer; border: 2px solid transparent; }
 .paint-toolbar .shift-chip.active { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-light); }
 .paint-hint { font-size: .78rem; color: var(--ink-light); margin-left: .5rem; }
+.paint-toolbar-label { font-size: .75rem; font-weight: 700; letter-spacing: .03em; color: var(--ink-light); }
 
-// ── Legend strip ──────────────────────────────────────────────────────────
-.legend-strip {
+// ── Status groups (working / on-call / not-working) ────────────────────────
+// Group border + label colors; chip colors stay distinct per status.
+.grp-working    { --grp-color: #7c3aed; }   // purple
+.grp-oncall     { --grp-color: #16a34a; }   // green
+.grp-notworking { --grp-color: #dc2626; }   // red
+
+// Inline single-line group: "Working — [chips]" inside a colored border.
+.status-group {
+  display: inline-flex;
+  flex-direction: row;
+  align-items: center;
+  gap: .4rem;
+  padding: .2rem .5rem;
+  border: 2px solid var(--grp-color);
+  border-radius: 8px;
+}
+.status-group-label { font-size: .72rem; font-weight: 700; color: var(--grp-color); white-space: nowrap; }
+.status-group-chips { display: flex; gap: .3rem; }
+
+// ── Legend (grouped, inline single line) ───────────────────────────────────
+.legend-groups {
   display: flex;
-  gap: 1rem;
-  padding: .6rem .75rem;
-  background: var(--paper-warm);
-  border-radius: 6px;
-  margin-top: .5rem;
+  gap: .6rem;
+  margin-top: .75rem;
   flex-wrap: wrap;
 }
-.legend-item { display: flex; align-items: center; gap: .35rem; font-size: .75rem; color: var(--ink-light); }
-.legend-chip { width: 28px; height: 16px; border-radius: 3px; display: inline-block; }
+.legend-group {
+  display: inline-flex;
+  flex-direction: row;
+  align-items: center;
+  gap: .5rem;
+  border: 2px solid var(--grp-color);
+  border-radius: 8px;
+  padding: .3rem .6rem;
+}
+.legend-group-title { font-size: .72rem; font-weight: 700; color: var(--grp-color); white-space: nowrap; }
+.legend-item-inline { display: inline-flex; align-items: center; gap: .3rem; font-size: .72rem; color: var(--ink-light); white-space: nowrap; }
+.legend-chip {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 30px; height: 18px; padding: 0 .3rem;
+  border-radius: 4px; font-size: .65rem; font-weight: 700;
+}
+.legend-desc { white-space: nowrap; }
 
 // ── Day detail panel ──────────────────────────────────────────────────────
 .detail-panel {
