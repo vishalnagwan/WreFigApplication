@@ -2,7 +2,7 @@ import {
   Component, Input, Output, EventEmitter,
   OnInit, inject
 } from '@angular/core';
-import { CommonModule }        from '@angular/common';
+
 import { FormsModule }         from '@angular/forms';
 import { InstructionService }  from '../../../services/instruction.service';
 import {
@@ -26,7 +26,7 @@ interface EditVm extends BranchInstructionsDto {
 @Component({
   selector:   'app-branch-instruction-editor',
   standalone: true,
-  imports:    [CommonModule, FormsModule],
+  imports: [FormsModule],
   template: `
 <div class="instr-editor-overlay" (click)="onOverlayClick($event)"></div>
 <div class="instr-editor-panel">
@@ -40,23 +40,31 @@ interface EditVm extends BranchInstructionsDto {
   </div>
 
   <!-- Body -->
-  <div class="instr-editor-body" *ngIf="editVm">
-    <div *ngFor="let sec of sortedSections">
-      <div class="instr-section-hdr" [class.bottom]="sec.position === 1">{{sec.title}}</div>
-      <div *ngFor="let line of sec.lines; let i = index">
-        <div class="instr-line-row" *ngIf="!line._deleted">
-          <textarea class="instr-line-textarea" [(ngModel)]="line.content"
-                    rows="2"></textarea>
-          <button class="instr-hl-btn" (click)="line.isHighlighted = !line.isHighlighted"
-                  [title]="line.isHighlighted ? 'Highlighted (urgent)' : 'Not highlighted'">
-            {{line.isHighlighted ? '🔴' : '⚪'}}
-          </button>
-          <button class="instr-del-btn" (click)="deleteLine(sec, i)" title="Delete line">🗑</button>
+  @if (editVm) {
+    <div class="instr-editor-body">
+      @for (sec of sortedSections; track sec) {
+        <div>
+          <div class="instr-section-hdr" [class.bottom]="sec.position === 1">{{sec.title}}</div>
+          @for (line of sec.lines; track line; let i = $index) {
+            <div>
+              @if (!line._deleted) {
+                <div class="instr-line-row">
+                  <textarea class="instr-line-textarea" [(ngModel)]="line.content"
+                  rows="2"></textarea>
+                  <button class="instr-hl-btn" (click)="line.isHighlighted = !line.isHighlighted"
+                    [title]="line.isHighlighted ? 'Highlighted (urgent)' : 'Not highlighted'">
+                    {{line.isHighlighted ? '🔴' : '⚪'}}
+                  </button>
+                  <button class="instr-del-btn" (click)="deleteLine(sec, i)" title="Delete line">🗑</button>
+                </div>
+              }
+            </div>
+          }
+          <button class="btn-ghost btn-sm" (click)="addLine(sec)" style="margin-top:.4rem;">+ Add line</button>
         </div>
-      </div>
-      <button class="btn-ghost btn-sm" (click)="addLine(sec)" style="margin-top:.4rem;">+ Add line</button>
+      }
     </div>
-  </div>
+  }
 
   <!-- Footer -->
   <div class="instr-editor-footer">
@@ -65,12 +73,16 @@ interface EditVm extends BranchInstructionsDto {
     </button>
     <button class="btn-ghost" (click)="closed.emit()" [disabled]="saving">Cancel</button>
     <span class="instr-save-status">
-      <span *ngIf="saveStatus === 'saved'" style="color:#16a34a;">✓ Saved</span>
-      <span *ngIf="saveStatus === 'error'" style="color:#dc2626;">Save failed</span>
+      @if (saveStatus === 'saved') {
+        <span style="color:#16a34a;">✓ Saved</span>
+      }
+      @if (saveStatus === 'error') {
+        <span style="color:#dc2626;">Save failed</span>
+      }
     </span>
   </div>
 </div>
-  `
+`
 })
 export class BranchInstructionEditorComponent implements OnInit {
   @Input() vm!: BranchInstructionsDto;

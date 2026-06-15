@@ -1,5 +1,5 @@
 import { Component, OnInit, inject } from '@angular/core';
-import { CommonModule }              from '@angular/common';
+
 import { FormsModule }               from '@angular/forms';
 import { UserService }               from '../../../services/user.service';
 import { BranchService }             from '../../../services/branch.service';
@@ -17,7 +17,7 @@ const ALL_ROLES = [
 @Component({
   selector:   'app-users',
   standalone: true,
-  imports:    [CommonModule, FormsModule],
+  imports: [FormsModule],
   template: `
 <div class="page-header">
   <h1>User Management</h1>
@@ -25,134 +25,166 @@ const ALL_ROLES = [
     <!-- Search with clear button -->
     <div class="search-wrap">
       <input type="text" class="home-search-input" placeholder="Search by name, email, role…"
-             [(ngModel)]="searchText" (ngModelChange)="onSearch()" />
-      <button *ngIf="searchText" class="search-clear-btn" (click)="clearSearch()" title="Clear search">✕</button>
+        [(ngModel)]="searchText" (ngModelChange)="onSearch()" />
+      @if (searchText) {
+        <button class="search-clear-btn" (click)="clearSearch()" title="Clear search">✕</button>
+      }
     </div>
     <button class="btn-primary" (click)="openCreate()">+ New User</button>
   </div>
 </div>
 
-<div *ngIf="loading" style="text-align:center;padding:3rem;color:var(--ink-faint);">Loading...</div>
+@if (loading) {
+  <div style="text-align:center;padding:3rem;color:var(--ink-faint);">Loading...</div>
+}
 
-<table class="users-table" *ngIf="!loading">
-  <thead>
-    <tr>
-      <th>Name</th>
-      <th>Email</th>
-      <th>Role</th>
-      <th>Branches</th>
-      <th>Status</th>
-      <th>Actions</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr *ngFor="let u of pagedRows">
-      <td>{{u.fullName}}</td>
-      <td>{{u.email}}</td>
-      <td>{{formatRole(u.role)}}</td>
-      <td>
-        <div class="branch-tags">
-          <!-- Show "All" when user has all branches assigned -->
-          <span class="branch-tag" *ngIf="isAllBranches(u)">All</span>
-          <ng-container *ngIf="!isAllBranches(u)">
-            <span class="branch-tag" *ngFor="let n of u.branchNames">{{n}}</span>
-            <span *ngIf="u.branchNames.length === 0" style="color:var(--ink-faint);font-size:.75rem;">—</span>
-          </ng-container>
-        </div>
-      </td>
-      <td>
-        <span class="status-pill" [class]="u.isActive ? 'green' : 'red'">
-          {{u.isActive ? 'Active' : 'Inactive'}}
-        </span>
-      </td>
-      <td>
-        <button class="btn-ghost btn-sm" (click)="openEdit(u)" style="margin-right:.4rem;">Edit</button>
-        <button class="btn-danger btn-sm" (click)="deactivate(u)"
-                *ngIf="u.isActive" [disabled]="saving">Deactivate</button>
-      </td>
-    </tr>
-    <tr *ngIf="filtered.length === 0">
-      <td colspan="6" style="text-align:center;color:var(--ink-faint);padding:2rem;">
-        {{users.length === 0 ? 'No users found.' : 'No results match "' + searchText + '".'}}
-      </td>
-    </tr>
-  </tbody>
-</table>
+@if (!loading) {
+  <table class="users-table">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Email</th>
+        <th>Role</th>
+        <th>Branches</th>
+        <th>Status</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (u of pagedRows; track u) {
+        <tr>
+          <td>{{u.fullName}}</td>
+          <td>{{u.email}}</td>
+          <td>{{formatRole(u.role)}}</td>
+          <td>
+            <div class="branch-tags">
+              <!-- Show "All" when user has all branches assigned -->
+              @if (isAllBranches(u)) {
+                <span class="branch-tag">All</span>
+              }
+              @if (!isAllBranches(u)) {
+                @for (n of u.branchNames; track n) {
+                  <span class="branch-tag">{{n}}</span>
+                }
+                @if (u.branchNames.length === 0) {
+                  <span style="color:var(--ink-faint);font-size:.75rem;">—</span>
+                }
+              }
+            </div>
+          </td>
+          <td>
+            <span class="status-pill" [class]="u.isActive ? 'green' : 'red'">
+              {{u.isActive ? 'Active' : 'Inactive'}}
+            </span>
+          </td>
+          <td>
+            <button class="btn-ghost btn-sm" (click)="openEdit(u)" style="margin-right:.4rem;">Edit</button>
+            @if (u.isActive) {
+              <button class="btn-danger btn-sm" (click)="deactivate(u)"
+              [disabled]="saving">Deactivate</button>
+            }
+          </td>
+        </tr>
+      }
+      @if (filtered.length === 0) {
+        <tr>
+          <td colspan="6" style="text-align:center;color:var(--ink-faint);padding:2rem;">
+            {{users.length === 0 ? 'No users found.' : 'No results match "' + searchText + '".'}}
+          </td>
+        </tr>
+      }
+    </tbody>
+  </table>
+}
 
 <!-- Paging footer -->
-<div class="dashboard-footer" *ngIf="!loading && users.length > 0">
-  <span>Showing {{pageStart}}–{{pageEnd}} of {{filtered.length}} user{{filtered.length !== 1 ? 's' : ''}}</span>
-  <div class="paging-controls" *ngIf="totalPages > 1">
-    <button class="btn-icon" (click)="goPage(currentPage - 1)" [disabled]="currentPage === 1">‹</button>
-    <span style="font-size:.82rem;">Page {{currentPage}} of {{totalPages}}</span>
-    <button class="btn-icon" (click)="goPage(currentPage + 1)" [disabled]="currentPage === totalPages">›</button>
+@if (!loading && users.length > 0) {
+  <div class="dashboard-footer">
+    <span>Showing {{pageStart}}–{{pageEnd}} of {{filtered.length}} user{{filtered.length !== 1 ? 's' : ''}}</span>
+    @if (totalPages > 1) {
+      <div class="paging-controls">
+        <button class="btn-icon" (click)="goPage(currentPage - 1)" [disabled]="currentPage === 1">‹</button>
+        <span style="font-size:.82rem;">Page {{currentPage}} of {{totalPages}}</span>
+        <button class="btn-icon" (click)="goPage(currentPage + 1)" [disabled]="currentPage === totalPages">›</button>
+      </div>
+    }
   </div>
-</div>
+}
 
 <!-- Modal -->
-<div class="modal-overlay" *ngIf="showModal" (click)="onOverlayClick($event)">
-  <div class="modal-card" (click)="$event.stopPropagation()">
-    <div class="modal-header">
-      {{modalMode === 'create' ? 'Create User' : 'Edit User'}}
-      <button class="btn-icon" (click)="closeModal()">✕</button>
-    </div>
-    <div class="modal-body">
-      <div class="field">
-        <label>Full Name</label>
-        <input type="text" [(ngModel)]="form.fullName" placeholder="Full name" />
+@if (showModal) {
+  <div class="modal-overlay" (click)="onOverlayClick($event)">
+    <div class="modal-card" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        {{modalMode === 'create' ? 'Create User' : 'Edit User'}}
+        <button class="btn-icon" (click)="closeModal()">✕</button>
       </div>
-      <div class="field">
-        <label>Email</label>
-        <input type="email" [(ngModel)]="form.email" placeholder="Email address" />
-      </div>
-      <div class="field">
-        <label>Password {{modalMode === 'edit' ? '(leave blank to keep current)' : ''}}</label>
-        <input type="password" [(ngModel)]="form.password" placeholder="Password" />
-      </div>
-      <div class="field">
-        <label>Role</label>
-        <select [(ngModel)]="form.role">
-          <option value="">Select role...</option>
-          <option *ngFor="let r of allRoles" [value]="r">{{formatRole(r)}}</option>
-        </select>
-      </div>
-      <div class="field" *ngIf="modalMode === 'edit'">
-        <label>
-          <input type="checkbox" [(ngModel)]="form.isActive" />
-          Active
-        </label>
-      </div>
-      <div class="field">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.35rem;">
-          <label style="margin:0;">Branches</label>
-          <label class="checkbox-item" style="margin:0;font-size:.8rem;color:var(--ink-light);gap:.3rem;">
-            <input type="checkbox"
-                   [checked]="allBranchesChecked"
-                   [indeterminate]="someBranchesChecked"
-                   (change)="toggleAllBranches($event)" />
-            All
-          </label>
+      <div class="modal-body">
+        <div class="field">
+          <label>Full Name</label>
+          <input type="text" [(ngModel)]="form.fullName" placeholder="Full name" />
         </div>
-        <div class="checkbox-grid scrollable-panel">
-          <label class="checkbox-item" *ngFor="let b of branches">
-            <input type="checkbox"
-                   [checked]="form.branchIds.includes(b.id)"
-                   (change)="toggleBranch(b.id, $event)" />
-            {{b.name}}
-          </label>
+        <div class="field">
+          <label>Email</label>
+          <input type="email" [(ngModel)]="form.email" placeholder="Email address" />
         </div>
+        <div class="field">
+          <label>Password {{modalMode === 'edit' ? '(leave blank to keep current)' : ''}}</label>
+          <input type="password" [(ngModel)]="form.password" placeholder="Password" />
+        </div>
+        <div class="field">
+          <label>Role</label>
+          <select [(ngModel)]="form.role">
+            <option value="">Select role...</option>
+            @for (r of allRoles; track r) {
+              <option [value]="r">{{formatRole(r)}}</option>
+            }
+          </select>
+        </div>
+        @if (modalMode === 'edit') {
+          <div class="field">
+            <label>
+              <input type="checkbox" [(ngModel)]="form.isActive" />
+              Active
+            </label>
+          </div>
+        }
+        <div class="field">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.35rem;">
+            <label style="margin:0;">Branches</label>
+            <label class="checkbox-item" style="margin:0;font-size:.8rem;color:var(--ink-light);gap:.3rem;">
+              <input type="checkbox"
+                [checked]="allBranchesChecked"
+                [indeterminate]="someBranchesChecked"
+                (change)="toggleAllBranches($event)" />
+              All
+            </label>
+          </div>
+          <div class="checkbox-grid scrollable-panel">
+            @for (b of branches; track b) {
+              <label class="checkbox-item">
+                <input type="checkbox"
+                  [checked]="form.branchIds.includes(b.id)"
+                  (change)="toggleBranch(b.id, $event)" />
+                {{b.name}}
+              </label>
+            }
+          </div>
+        </div>
+        @if (modalError) {
+          <p style="color:#dc2626;font-size:.82rem;">{{modalError}}</p>
+        }
       </div>
-      <p *ngIf="modalError" style="color:#dc2626;font-size:.82rem;">{{modalError}}</p>
-    </div>
-    <div class="modal-footer">
-      <button class="btn-ghost" (click)="closeModal()" [disabled]="saving">Cancel</button>
-      <button class="btn-primary" (click)="saveModal()" [disabled]="saving">
-        {{saving ? 'Saving...' : 'Save'}}
-      </button>
+      <div class="modal-footer">
+        <button class="btn-ghost" (click)="closeModal()" [disabled]="saving">Cancel</button>
+        <button class="btn-primary" (click)="saveModal()" [disabled]="saving">
+          {{saving ? 'Saving...' : 'Save'}}
+        </button>
+      </div>
     </div>
   </div>
-</div>
-  `,
+}
+`,
   styles: [`
     .search-wrap {
       position: relative;

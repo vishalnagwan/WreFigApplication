@@ -1,5 +1,5 @@
 import { Component, OnInit, OnDestroy, Optional } from '@angular/core';
-import { CommonModule }                            from '@angular/common';
+
 import { RouterOutlet }                            from '@angular/router';
 import { ToastModule }                             from 'primeng/toast';
 import { Subject }                                 from 'rxjs';
@@ -13,7 +13,7 @@ import { environment }                             from '../environments/environ
 @Component({
   selector:    'app-root',
   standalone:  true,
-  imports:     [CommonModule, RouterOutlet, ToastModule],
+  imports: [RouterOutlet, ToastModule],
   templateUrl: './app.component.html',
 })
 export class AppComponent implements OnInit, OnDestroy {

@@ -1,7 +1,7 @@
 import {
   Component, OnInit, OnDestroy, HostListener, ViewChild, inject
 } from '@angular/core';
-import { CommonModule, TitleCasePipe }    from '@angular/common';
+import { CommonModule, TitleCasePipe } from '@angular/common';
 import { FormsModule }                    from '@angular/forms';
 import { ActivatedRoute, RouterModule }   from '@angular/router';
 import { ScheduleService }                from '../../../services/schedule.service';
@@ -36,10 +36,12 @@ const NOTE_ROLES  = [ROLES.Admin, ROLES.FieldSupervisor, ROLES.DispatchSuperviso
 <div class="branch-header">
   <div class="branch-header-left">
     <a routerLink="/" class="btn-ghost btn-sm">← All Field Offices</a>
-    <h2>{{summary?.branchName || 'Loading...'}}</h2>
-    <span class="status-pill" [class]="summary!.status || ''" *ngIf="summary">
-      {{statusLabel}}
-    </span>
+    <h2>{{summary ? summary.state + ' — ' + summary.branchName : 'Loading...'}}</h2>
+    @if (summary) {
+      <span class="status-pill" [class]="summary!.status || ''">
+        {{statusLabel}}
+      </span>
+    }
   </div>
   <div class="branch-header-right">
     <div class="month-nav-btns">
@@ -52,219 +54,261 @@ const NOTE_ROLES  = [ROLES.Admin, ROLES.FieldSupervisor, ROLES.DispatchSuperviso
 </div>
 
 <!-- Leadership pill (same visual pattern as instruction chips) -->
-<div class="instr-bar" *ngIf="leaders.length > 0">
-  <span class="instr-chip"
-        [class.active]="leadershipExpanded"
-        (click)="leadershipExpanded = !leadershipExpanded">
-    LEADERSHIP
-    <span class="instr-badge">{{leaders.length}}</span>
-  </span>
-</div>
+@if (leaders.length > 0) {
+  <div class="instr-bar">
+    <span class="instr-chip"
+      [class.active]="leadershipExpanded"
+      (click)="leadershipExpanded = !leadershipExpanded">
+      LEADERSHIP
+      <span class="instr-badge">{{leaders.length}}</span>
+    </span>
+  </div>
+}
 
 <!-- Leadership popover -->
-<div class="instr-popover" *ngIf="leadershipExpanded && leaders.length > 0">
-  <div class="instr-popover-hdr">
-    Leadership Information
-    <button class="btn-icon" style="color:#fff;font-size:.8rem;" (click)="leadershipExpanded = false">✕</button>
+@if (leadershipExpanded && leaders.length > 0) {
+  <div class="instr-popover">
+    <div class="instr-popover-hdr">
+      Leadership Information
+      <button class="btn-icon" style="color:#fff;font-size:.8rem;" (click)="leadershipExpanded = false">✕</button>
+    </div>
+    <div class="instr-popover-body" style="overflow-x:auto;padding:0;">
+      <table class="leadership-table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Job Title</th>
+            <th>Mobile</th>
+            <th>Alt Phone</th>
+            <th>Manager</th>
+            <th>Notes</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (ldr of leaders; track ldr) {
+            <tr>
+              <td class="ldr-name">{{ldr.name}}</td>
+              <td class="ldr-info">{{ldr.jobTitle || '—'}}</td>
+              <td class="ldr-info">{{formatPhone(ldr.workMobilePhone)}}</td>
+              <td class="ldr-info">{{formatPhone(ldr.altPhone)}}</td>
+              <td class="ldr-info">{{ldr.managerName || '—'}}</td>
+              <td class="ldr-info ldr-notes">{{ldr.notes || '—'}}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
   </div>
-  <div class="instr-popover-body" style="overflow-x:auto;padding:0;">
-    <table class="leadership-table">
+}
+
+<!-- Leader editor modal -->
+@if (leaderEditorOpen) {
+  <div class="modal-backdrop" (click)="closeLeaderEditor()"></div>
+}
+@if (leaderEditorOpen) {
+  <div class="modal" style="max-width:480px;">
+    <div class="modal-header">
+      <span>{{editingLeader ? 'Edit Leader' : 'Add Leader'}}</span>
+      <button class="btn-icon" (click)="closeLeaderEditor()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Name *</label>
+        <input class="form-control" [(ngModel)]="leaderForm.name" placeholder="Full name" />
+      </div>
+      <div class="form-group">
+        <label>Job Title *</label>
+        <input class="form-control" [(ngModel)]="leaderForm.jobTitle" placeholder="e.g. Pumping Supervisor" />
+      </div>
+      <div class="form-group">
+        <label>Mobile Phone</label>
+        <input class="form-control" [(ngModel)]="leaderForm.workMobilePhone" placeholder="(555) 555-5555" />
+      </div>
+      <div class="form-group">
+        <label>Alt Phone</label>
+        <input class="form-control" [(ngModel)]="leaderForm.altPhone" placeholder="Optional" />
+      </div>
+      <div class="form-group">
+        <label>Manager Name</label>
+        <input class="form-control" [(ngModel)]="leaderForm.managerName" placeholder="Reports to" />
+      </div>
+      <div class="form-group">
+        <label>Notes</label>
+        <input class="form-control" [(ngModel)]="leaderForm.notes" placeholder="Optional notes" />
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-ghost" (click)="closeLeaderEditor()">Cancel</button>
+      <button class="btn-primary" (click)="saveLeader()" [disabled]="!leaderForm.name || !leaderForm.jobTitle">Save</button>
+    </div>
+  </div>
+}
+
+<!-- Instructions chip strip -->
+@if (branchId) {
+  <app-branch-instructions
+    #instrStrip
+    [branchId]="branchId"
+    [canEdit]="canInstructionEdit"
+    (editRequested)="openInstructionEditor()">
+  </app-branch-instructions>
+}
+
+<!-- Fill bar -->
+@if (grid && summary && !summary.isAcquisition) {
+  <div style="margin-bottom:.75rem;">
+    <app-fill-bar [pct]="computedFillRate"></app-fill-bar>
+  </div>
+}
+
+<!-- Paint toolbar -->
+@if (canEdit) {
+  <div class="paint-toolbar">
+    @for (sc of paintCodes; track sc) {
+      <app-shift-chip
+        [code]="sc.code"
+        [statusCodes]="statusCodes"
+        [class.active]="paintMode === sc.code"
+        (click)="setPaintMode(sc.code)">
+      </app-shift-chip>
+    }
+    <button class="btn-ghost btn-sm" [class.active]="paintMode === 'clear'" (click)="setPaintMode('clear')">Clear</button>
+    @if (selectedRows.size > 0) {
+      <span style="font-size:.78rem;color:var(--ink-light);">
+        {{selectedRows.size}} row(s) selected
+      </span>
+    }
+    @if (paintMode) {
+      <span class="paint-hint">
+        Click a cell to paint. Esc to cancel.
+      </span>
+    }
+  </div>
+}
+
+<!-- Schedule table -->
+@if (grid) {
+  <div class="schedule-table-wrap">
+    <table class="schedule-table">
       <thead>
         <tr>
-          <th>Name</th>
-          <th>Job Title</th>
-          <th>Mobile</th>
-          <th>Alt Phone</th>
-          <th>Manager</th>
-          <th>Notes</th>
+          @if (canEdit) {
+            <th class="cb-col"></th>
+          }
+          <th class="emp-col">Technician</th>
+          <th class="shift-col">Shift</th>
+          <th class="jobtitle-col">Job Title</th>
+          <th class="resource-col">Resource Type</th>
+          <th class="manager-col">Manager</th>
+          <th class="mobile-col">Mobile</th>
+          @for (d of grid.days; track d) {
+            <th class="date-col" [class.weekend]="d.isWeekend">
+              <div class="day-hdr">
+                <span class="day-abbr">{{d.dayAbbr | titlecase}}</span>
+                <span class="day-num">{{d.day}}</span>
+              </div>
+            </th>
+          }
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let ldr of leaders">
-          <td class="ldr-name">{{ldr.name}}</td>
-          <td class="ldr-info">{{ldr.jobTitle || '—'}}</td>
-          <td class="ldr-info">{{formatPhone(ldr.workMobilePhone)}}</td>
-          <td class="ldr-info">{{formatPhone(ldr.altPhone)}}</td>
-          <td class="ldr-info">{{ldr.managerName || '—'}}</td>
-          <td class="ldr-info ldr-notes">{{ldr.notes || '—'}}</td>
-        </tr>
+        @for (row of grid.rows; track row) {
+          <tr
+            [class.selected-row]="selectedRows.has(row.employeeId)">
+            @if (canEdit) {
+              <td class="cb-col">
+                <input type="checkbox"
+                  [checked]="selectedRows.has(row.employeeId)"
+                  (change)="toggleRowSelect(row.employeeId)" />
+              </td>
+            }
+            <td class="emp-col" style="padding-left:.5rem;font-size:.8rem;font-weight:600;">{{row.name}}</td>
+            <td class="shift-col">
+              <span class="shift-badge"
+                [class.am]="row.defaultShift.toUpperCase() === 'AM'"
+                [class.pm]="row.defaultShift.toUpperCase() === 'PM'">
+                {{row.defaultShift || '—'}}
+              </span>
+            </td>
+            <td class="jobtitle-col" style="font-size:.75rem;color:var(--ink-light);padding-left:.5rem;">{{row.jobTitle || '—'}}</td>
+            <td class="resource-col" style="font-size:.75rem;color:var(--ink-light);padding-left:.5rem;">{{resourceDisplay(row.resourceCategory)}}</td>
+            <td class="manager-col" style="font-size:.75rem;color:var(--ink-light);padding-left:.5rem;">{{row.managerName || '—'}}</td>
+            <td class="mobile-col" style="font-size:.75rem;color:var(--ink-light);padding-left:.5rem;">{{row.workMobilePhone || '—'}}</td>
+            @for (d of grid.days; track d) {
+              <td
+                [class.weekend]="d.isWeekend"
+                [class.paint-cursor]="paintMode !== null"
+                [class.note-pulse]="row.cells[d.day]?.hasNote && !isViewed(row.employeeId, d.day)"
+                (click)="handleCellClick(row, d.day, row.cells[d.day])">
+                <app-shift-chip
+                  [code]="row.cells[d.day]?.statusCode ?? '—'"
+                  [hasNote]="row.cells[d.day]?.hasNote ?? false"
+                  [justPainted]="justPainted.has(row.employeeId + '-' + d.day)"
+                  [statusCodes]="statusCodes">
+                </app-shift-chip>
+              </td>
+            }
+          </tr>
+        }
       </tbody>
     </table>
   </div>
-</div>
-
-<!-- Leader editor modal -->
-<div class="modal-backdrop" *ngIf="leaderEditorOpen" (click)="closeLeaderEditor()"></div>
-<div class="modal" *ngIf="leaderEditorOpen" style="max-width:480px;">
-  <div class="modal-header">
-    <span>{{editingLeader ? 'Edit Leader' : 'Add Leader'}}</span>
-    <button class="btn-icon" (click)="closeLeaderEditor()">✕</button>
-  </div>
-  <div class="modal-body">
-    <div class="form-group">
-      <label>Name *</label>
-      <input class="form-control" [(ngModel)]="leaderForm.name" placeholder="Full name" />
-    </div>
-    <div class="form-group">
-      <label>Job Title *</label>
-      <input class="form-control" [(ngModel)]="leaderForm.jobTitle" placeholder="e.g. Pumping Supervisor" />
-    </div>
-    <div class="form-group">
-      <label>Mobile Phone</label>
-      <input class="form-control" [(ngModel)]="leaderForm.workMobilePhone" placeholder="(555) 555-5555" />
-    </div>
-    <div class="form-group">
-      <label>Alt Phone</label>
-      <input class="form-control" [(ngModel)]="leaderForm.altPhone" placeholder="Optional" />
-    </div>
-    <div class="form-group">
-      <label>Manager Name</label>
-      <input class="form-control" [(ngModel)]="leaderForm.managerName" placeholder="Reports to" />
-    </div>
-    <div class="form-group">
-      <label>Notes</label>
-      <input class="form-control" [(ngModel)]="leaderForm.notes" placeholder="Optional notes" />
-    </div>
-  </div>
-  <div class="modal-footer">
-    <button class="btn-ghost" (click)="closeLeaderEditor()">Cancel</button>
-    <button class="btn-primary" (click)="saveLeader()" [disabled]="!leaderForm.name || !leaderForm.jobTitle">Save</button>
-  </div>
-</div>
-
-<!-- Instructions chip strip -->
-<app-branch-instructions
-  #instrStrip
-  *ngIf="branchId"
-  [branchId]="branchId"
-  [canEdit]="canInstructionEdit"
-  (editRequested)="openInstructionEditor()">
-</app-branch-instructions>
-
-<!-- Fill bar -->
-<div style="margin-bottom:.75rem;" *ngIf="grid && summary && !summary.isAcquisition">
-  <app-fill-bar [pct]="computedFillRate"></app-fill-bar>
-</div>
-
-<!-- Paint toolbar -->
-<div class="paint-toolbar" *ngIf="canEdit">
-  <app-shift-chip
-    *ngFor="let sc of paintCodes"
-    [code]="sc.code"
-    [statusCodes]="statusCodes"
-    [class.active]="paintMode === sc.code"
-    (click)="setPaintMode(sc.code)">
-  </app-shift-chip>
-  <button class="btn-ghost btn-sm" [class.active]="paintMode === 'clear'" (click)="setPaintMode('clear')">Clear</button>
-  <span *ngIf="selectedRows.size > 0" style="font-size:.78rem;color:var(--ink-light);">
-    {{selectedRows.size}} row(s) selected
-  </span>
-  <span class="paint-hint" *ngIf="paintMode">
-    Click a cell to paint. Esc to cancel.
-  </span>
-</div>
-
-<!-- Schedule table -->
-<div class="schedule-table-wrap" *ngIf="grid">
-  <table class="schedule-table">
-    <thead>
-      <tr>
-        <th class="cb-col" *ngIf="canEdit"></th>
-        <th class="emp-col">Technician</th>
-        <th class="shift-col">Shift</th>
-        <th class="jobtitle-col">Job Title</th>
-        <th class="resource-col">Resource Type</th>
-        <th class="manager-col">Manager</th>
-        <th class="mobile-col">Mobile</th>
-        <th *ngFor="let d of grid.days" class="date-col" [class.weekend]="d.isWeekend">
-          <div class="day-hdr">
-            <span class="day-abbr">{{d.dayAbbr | titlecase}}</span>
-            <span class="day-num">{{d.day}}</span>
-          </div>
-        </th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr *ngFor="let row of grid.rows"
-          [class.selected-row]="selectedRows.has(row.employeeId)">
-        <td class="cb-col" *ngIf="canEdit">
-          <input type="checkbox"
-                 [checked]="selectedRows.has(row.employeeId)"
-                 (change)="toggleRowSelect(row.employeeId)" />
-        </td>
-        <td class="emp-col" style="padding-left:.5rem;font-size:.8rem;font-weight:600;">{{row.name}}</td>
-        <td class="shift-col">
-          <span class="shift-badge"
-                [class.am]="row.defaultShift.toUpperCase() === 'AM'"
-                [class.pm]="row.defaultShift.toUpperCase() === 'PM'">
-            {{row.defaultShift || '—'}}
-          </span>
-        </td>
-        <td class="jobtitle-col" style="font-size:.75rem;color:var(--ink-light);padding-left:.5rem;">{{row.jobTitle || '—'}}</td>
-        <td class="resource-col" style="font-size:.75rem;color:var(--ink-light);padding-left:.5rem;">{{resourceDisplay(row.resourceCategory)}}</td>
-        <td class="manager-col" style="font-size:.75rem;color:var(--ink-light);padding-left:.5rem;">{{row.managerName || '—'}}</td>
-        <td class="mobile-col" style="font-size:.75rem;color:var(--ink-light);padding-left:.5rem;">{{row.workMobilePhone || '—'}}</td>
-        <td *ngFor="let d of grid.days"
-            [class.weekend]="d.isWeekend"
-            [class.paint-cursor]="paintMode !== null"
-            [class.note-pulse]="row.cells[d.day]?.hasNote && !isViewed(row.employeeId, d.day)"
-            (click)="handleCellClick(row, d.day, row.cells[d.day])">
-          <app-shift-chip
-            [code]="row.cells[d.day]?.statusCode ?? '—'"
-            [hasNote]="row.cells[d.day]?.hasNote ?? false"
-            [justPainted]="justPainted.has(row.employeeId + '-' + d.day)"
-            [statusCodes]="statusCodes">
-          </app-shift-chip>
-        </td>
-      </tr>
-    </tbody>
-  </table>
-</div>
+}
 
 <!-- Legend -->
-<div class="legend-strip" *ngIf="legendCodes.length > 0">
-  <span class="legend-item" *ngFor="let sc of legendCodes">
-    <span class="legend-chip {{sc.cssClass}}"></span>
-    <span>{{sc.label}}</span>
-  </span>
-</div>
+@if (legendCodes.length > 0) {
+  <div class="legend-strip">
+    @for (sc of legendCodes; track sc) {
+      <span class="legend-item">
+        <span class="legend-chip {{sc.cssClass}}"></span>
+        <span>{{sc.label}}</span>
+      </span>
+    }
+  </div>
+}
 
 <!-- Loading -->
-<div *ngIf="loading" style="text-align:center;padding:3rem;color:var(--ink-faint);">
-  Loading schedule...
-</div>
+@if (loading) {
+  <div style="text-align:center;padding:3rem;color:var(--ink-faint);">
+    Loading schedule...
+  </div>
+}
 
 <!-- Load error -->
-<div *ngIf="!loading && loadError" style="text-align:center;padding:3rem;">
-  <div style="color:#e53e3e;font-weight:600;margin-bottom:.5rem;">Could not load schedule</div>
-  <div style="color:var(--ink-faint);font-size:.85rem;margin-bottom:1rem;">{{loadError}}</div>
-  <button class="btn-primary" (click)="loadGrid()">Retry</button>
-</div>
+@if (!loading && loadError) {
+  <div style="text-align:center;padding:3rem;">
+    <div style="color:#e53e3e;font-weight:600;margin-bottom:.5rem;">Could not load schedule</div>
+    <div style="color:var(--ink-faint);font-size:.85rem;margin-bottom:1rem;">{{loadError}}</div>
+    <button class="btn-primary" (click)="loadGrid()">Retry</button>
+  </div>
+}
 
 <!-- Day detail panel -->
-<app-day-detail-panel
-  *ngIf="detailRow"
-  [row]="detailRow"
-  [day]="detailDay!"
-  [cell]="detailCell"
-  [year]="year"
-  [month]="month"
-  [branchId]="branchId"
-  [canNote]="canNote"
-  [statusCodes]="statusCodes"
-  (close)="closeDetailPanel()"
-  (noteSaved)="onNoteSaved($event)">
-</app-day-detail-panel>
+@if (detailRow) {
+  <app-day-detail-panel
+    [row]="detailRow"
+    [day]="detailDay!"
+    [cell]="detailCell"
+    [year]="year"
+    [month]="month"
+    [branchId]="branchId"
+    [canNote]="canNote"
+    [statusCodes]="statusCodes"
+    (close)="closeDetailPanel()"
+    (noteSaved)="onNoteSaved($event)">
+  </app-day-detail-panel>
+}
 
 <!-- Instruction editor -->
-<app-branch-instruction-editor
-  *ngIf="instructionEditorOpen && instructions"
-  [vm]="instructions"
-  [branchName]="summary?.branchName ?? ''"
-  (saved)="onInstructionSaved()"
-  (closed)="instructionEditorOpen = false">
-</app-branch-instruction-editor>
-  `
+@if (instructionEditorOpen && instructions) {
+  <app-branch-instruction-editor
+    [vm]="instructions"
+    [branchName]="summary?.branchName ?? ''"
+    (saved)="onInstructionSaved()"
+    (closed)="instructionEditorOpen = false">
+  </app-branch-instruction-editor>
+}
+`
 })
 export class ScheduleComponent implements OnInit, OnDestroy {
   @ViewChild('instrStrip') instrStrip?: BranchInstructionsComponent;

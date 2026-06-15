@@ -12,16 +12,18 @@
   --topbar-h: 64px;
   --radius: 4px;
 
-  // Status colors
-  --wa-bg: #ede9fe; --wa-fg: #5b21b6;
-  --wp-bg: #fce7f3; --wp-fg: #9d174d;
-  --o-bg:  #1e1e2e; --o-fg:  #d4d4d4;
-  --co-bg: #fef9c3; --co-fg: #854d0e;
-  --oc-bg: #dcfce7; --oc-fg: #166534;
-  --tr-bg: #fee2e2; --tr-fg: #991b1b;
-  --hd-bg: #ffe4e6; --hd-fg: #9f1239;
-  --wx-bg: #ffedd5; --wx-fg: #9a3412;
-  --blank-bg: #f1f5f9; --blank-fg: #94a3b8;
+  // Status colors — grouped by working vs not-working (June 4 feedback #9).
+  // WORKING family → green hues (WA, WP, TR).
+  --wa-bg: #bbf7d0; --wa-fg: #14532d;   // Working AM  (deep green)
+  --wp-bg: #dcfce7; --wp-fg: #166534;   // Working PM  (light green)
+  --tr-bg: #99f6e4; --tr-fg: #115e59;   // Training    (teal-green; engaged day)
+  // NOT-WORKING family → slate/gray hues (O/PTO, CO, OC, HD, WX, blank).
+  --o-bg:  #cbd5e1; --o-fg:  #1e293b;   // Off / PTO   (darker slate)
+  --co-bg: #f1f5f9; --co-fg: #475569;   // Call-Out    (light slate)
+  --oc-bg: #e2e8f0; --oc-fg: #334155;   // On-Call     (slate)
+  --hd-bg: #e5e7eb; --hd-fg: #4b5563;   // Holiday     (gray)
+  --wx-bg: #f3f4f6; --wx-fg: #6b7280;   // Weather     (light gray)
+  --blank-bg: #f8fafc; --blank-fg: #94a3b8;
 
   // Urgency
   --red-urgent: #e53935;
@@ -434,6 +436,8 @@ button:disabled { opacity: .45; cursor: not-allowed; }
 .branch-card-name { font-weight: 700; font-size: .85rem; margin-bottom: .25rem; }
 .branch-card-loc { font-size: .75rem; color: var(--ink-light); margin-bottom: .5rem; }
 .branch-card-drivers { font-size: .75rem; color: var(--ink-light); margin-bottom: .35rem; }
+.branch-card-updated { font-size: .7rem; color: var(--ink-faint); margin-bottom: .35rem; }
+.branch-card-updated.stale { color: #b45309; font-weight: 600; }
 .branch-card-acq-label {
   font-size: .7rem;
   font-weight: 700;

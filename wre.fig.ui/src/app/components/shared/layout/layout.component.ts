@@ -1,5 +1,5 @@
 import { Component, OnInit, inject } from '@angular/core';
-import { CommonModule }              from '@angular/common';
+
 import { Router, RouterModule }      from '@angular/router';
 import { AuthService }               from '../../../services/auth.service';
 import { AuditService }              from '../../../services/audit.service';
@@ -18,7 +18,7 @@ const PAGE_MAP: Record<string, string> = {
 @Component({
   selector:   'app-layout',
   standalone: true,
-  imports:    [CommonModule, RouterModule, FeedbackPanelComponent],
+  imports: [RouterModule, FeedbackPanelComponent],
   template: `
 <div class="app-shell">
   <header class="topbar">
@@ -28,21 +28,32 @@ const PAGE_MAP: Record<string, string> = {
       </a>
       <nav class="topbar-nav">
         <a routerLink="/" routerLinkActive="active"
-           [routerLinkActiveOptions]="{exact:true}">Home</a>
-        <a routerLink="/compliance" routerLinkActive="active"
-           *ngIf="canViewCompliance">Compliance</a>
-        <a routerLink="/alerts" routerLinkActive="active"
-           *ngIf="canViewAlerts">
-          Alerts
-          <span *ngIf="alertCount > 0" class="badge">{{alertCount}}</span>
-        </a>
-        <a routerLink="/users" routerLinkActive="active"
-           *ngIf="isPlannerDashboard">Users</a>
-        <a routerLink="/technician" routerLinkActive="active"
-           *ngIf="isPlannerDashboard">Technician</a>
+        [routerLinkActiveOptions]="{exact:true}">Home</a>
+        @if (canViewCompliance) {
+          <a routerLink="/compliance" routerLinkActive="active"
+          >Compliance</a>
+        }
+        @if (canViewAlerts) {
+          <a routerLink="/alerts" routerLinkActive="active"
+            >
+            Alerts
+            @if (alertCount > 0) {
+              <span class="badge">{{alertCount}}</span>
+            }
+          </a>
+        }
+        @if (isPlannerDashboard) {
+          <a routerLink="/users" routerLinkActive="active"
+          >Users</a>
+        }
+        @if (isPlannerDashboard) {
+          <a routerLink="/technician" routerLinkActive="active"
+          >Technician</a>
+        }
         <!-- Rollover link hidden — functionality intact, re-enable by un-commenting
-        <a routerLink="/rollover" routerLinkActive="active"
-           *ngIf="isPlannerDashboard">Rollover</a>
+        @if (isPlannerDashboard) {
+          <a routerLink="/rollover" routerLinkActive="active">Rollover</a>
+        }
         -->
       </nav>
     </div>
@@ -62,12 +73,13 @@ const PAGE_MAP: Record<string, string> = {
   </main>
 </div>
 
-<app-feedback-panel
-  *ngIf="showFeedbackPanel"
-  [page]="currentPage"
-  (close)="showFeedbackPanel = false">
-</app-feedback-panel>
-  `
+@if (showFeedbackPanel) {
+  <app-feedback-panel
+    [page]="currentPage"
+    (close)="showFeedbackPanel = false">
+  </app-feedback-panel>
+}
+`
 })
 export class LayoutComponent implements OnInit {
   private auth    = inject(AuthService);

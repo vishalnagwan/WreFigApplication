@@ -2,7 +2,7 @@ import {
   Component, Input, Output, EventEmitter,
   OnInit, HostListener, inject
 } from '@angular/core';
-import { CommonModule }          from '@angular/common';
+
 import { FormsModule }           from '@angular/forms';
 import { ScheduleService }       from '../../../services/schedule.service';
 import { AuditService }          from '../../../services/audit.service';
@@ -13,7 +13,7 @@ import { ShiftChipComponent }    from '../shift-chip/shift-chip.component';
 @Component({
   selector:   'app-day-detail-panel',
   standalone: true,
-  imports:    [CommonModule, FormsModule, ShiftChipComponent],
+  imports: [FormsModule, ShiftChipComponent],
   template: `
 <div class="detail-panel">
   <!-- Header -->
@@ -70,22 +70,26 @@ import { ShiftChipComponent }    from '../shift-chip/shift-chip.component';
             <div class="info-label">Work Phone</div>
             <div style="display:flex;align-items:center;gap:.4rem;flex-wrap:wrap;">
               <span>{{row.workPhone || '—'}}</span>
-              <a *ngIf="row.workPhone" class="dialpad-btn"
-                 href="https://dial.pad.com" target="_blank" rel="noopener"
-                 title="Open in Dialpad">
-                📞 DialPad
-              </a>
+              @if (row.workPhone) {
+                <a class="dialpad-btn"
+                  href="https://dial.pad.com" target="_blank" rel="noopener"
+                  title="Open in Dialpad">
+                  📞 DialPad
+                </a>
+              }
             </div>
           </div>
           <div class="info-item">
             <div class="info-label">Mobile</div>
             <div style="display:flex;align-items:center;gap:.4rem;flex-wrap:wrap;">
               <span>{{row.workMobilePhone || '—'}}</span>
-              <a *ngIf="row.workMobilePhone && !row.workPhone" class="dialpad-btn"
-                 href="https://dial.pad.com" target="_blank" rel="noopener"
-                 title="Open in Dialpad">
-                📞 DialPad
-              </a>
+              @if (row.workMobilePhone && !row.workPhone) {
+                <a class="dialpad-btn"
+                  href="https://dial.pad.com" target="_blank" rel="noopener"
+                  title="Open in Dialpad">
+                  📞 DialPad
+                </a>
+              }
             </div>
           </div>
         </div>
@@ -95,13 +99,19 @@ import { ShiftChipComponent }    from '../shift-chip/shift-chip.component';
       <div class="detail-section">
         <div class="detail-section-title-row">
           <span class="detail-section-title" style="margin:0;">Supervisor Note</span>
-          <div *ngIf="canNote" style="display:flex;align-items:center;gap:.5rem;">
-            <span *ngIf="saveSuccess" style="color:#16a34a;font-size:.78rem;">✓ Saved</span>
-            <span *ngIf="saveError"   style="color:#dc2626;font-size:.78rem;">Failed</span>
-            <button class="btn-primary btn-sm" (click)="saveNote()" [disabled]="saving">
-              {{saving ? 'Saving...' : 'Save Note'}}
-            </button>
-          </div>
+          @if (canNote) {
+            <div style="display:flex;align-items:center;gap:.5rem;">
+              @if (saveSuccess) {
+                <span style="color:#16a34a;font-size:.78rem;">✓ Saved</span>
+              }
+              @if (saveError) {
+                <span   style="color:#dc2626;font-size:.78rem;">Failed</span>
+              }
+              <button class="btn-primary btn-sm" (click)="saveNote()" [disabled]="saving">
+                {{saving ? 'Saving...' : 'Save Note'}}
+              </button>
+            </div>
+          }
         </div>
         <textarea
           class="note-textarea"
@@ -114,20 +124,28 @@ import { ShiftChipComponent }    from '../shift-chip/shift-chip.component';
       <!-- History -->
       <div class="detail-section">
         <div class="detail-section-title">Change History</div>
-        <div *ngIf="loadingHistory" style="color:var(--ink-faint);font-size:.8rem;">Loading...</div>
-        <div *ngIf="!loadingHistory && visibleHistory.length === 0"
-             style="color:var(--ink-faint);font-size:.8rem;">No changes recorded for this driver.</div>
+        @if (loadingHistory) {
+          <div style="color:var(--ink-faint);font-size:.8rem;">Loading...</div>
+        }
+        @if (!loadingHistory && visibleHistory.length === 0) {
+          <div
+          style="color:var(--ink-faint);font-size:.8rem;">No changes recorded for this driver.</div>
+        }
         <div class="history-timeline scrollable-history">
-          <div class="history-item" *ngFor="let h of visibleHistory">
-            <div class="history-dot blue"></div>
-            <div>
-              <div>{{historyText(h)}}</div>
-              <div style="font-size:.7rem;color:var(--ink-faint);font-family:'DM Mono',monospace;">
-                {{historyTime(h)}}
-                <span *ngIf="h.performedBy"> · {{h.performedBy}}</span>
+          @for (h of visibleHistory; track h) {
+            <div class="history-item">
+              <div class="history-dot blue"></div>
+              <div>
+                <div>{{historyText(h)}}</div>
+                <div style="font-size:.7rem;color:var(--ink-faint);font-family:'DM Mono',monospace;">
+                  {{historyTime(h)}}
+                  @if (h.performedBy) {
+                    <span> · {{h.performedBy}}</span>
+                  }
+                </div>
               </div>
             </div>
-          </div>
+          }
         </div>
       </div>
 
@@ -146,7 +164,7 @@ import { ShiftChipComponent }    from '../shift-chip/shift-chip.component';
 
   </div>
 </div>
-  `
+`
 })
 export class DayDetailPanelComponent implements OnInit {
   @Input() row!: EmployeeScheduleRowDto;

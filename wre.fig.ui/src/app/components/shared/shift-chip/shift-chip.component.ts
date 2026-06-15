@@ -1,17 +1,19 @@
 import { Component, Input } from '@angular/core';
-import { CommonModule }     from '@angular/common';
+
 import { StatusCodeDto }    from '../../../models/schedule.model';
 
 @Component({
   selector:   'app-shift-chip',
   standalone: true,
-  imports:    [CommonModule],
+  imports: [],
   template: `
 <span class="shift-chip {{chipClass}}" [class.just-painted]="justPainted">
   {{code || '—'}}
-  <span *ngIf="hasNote" title="Has note">🔔</span>
+  @if (hasNote) {
+    <span title="Has note">🔔</span>
+  }
 </span>
-  `
+`
 })
 export class ShiftChipComponent {
   @Input() code: string = '—';

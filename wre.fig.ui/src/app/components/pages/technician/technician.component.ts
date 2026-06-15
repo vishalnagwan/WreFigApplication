@@ -1,5 +1,5 @@
 import { Component, OnInit, inject } from '@angular/core';
-import { CommonModule }              from '@angular/common';
+
 import { FormsModule }               from '@angular/forms';
 import { EmployeeService }           from '../../../services/employee.service';
 import { BranchService }             from '../../../services/branch.service';
@@ -13,7 +13,7 @@ type ModalMode = 'create' | 'edit';
 @Component({
   selector:   'app-technician',
   standalone: true,
-  imports:    [CommonModule, FormsModule],
+  imports: [FormsModule],
   template: `
 <div class="page-header">
   <h1>Technician Management</h1>
@@ -21,196 +21,220 @@ type ModalMode = 'create' | 'edit';
     <!-- Search with clear button -->
     <div class="search-wrap">
       <input type="text" class="home-search-input" placeholder="Search by name, branch, resource type…"
-             [(ngModel)]="searchText" (ngModelChange)="onSearch()" />
-      <button *ngIf="searchText" class="search-clear-btn" (click)="clearSearch()" title="Clear search">✕</button>
+        [(ngModel)]="searchText" (ngModelChange)="onSearch()" />
+      @if (searchText) {
+        <button class="search-clear-btn" (click)="clearSearch()" title="Clear search">✕</button>
+      }
     </div>
     <button class="btn-primary" (click)="openCreate()">+ New Technician</button>
   </div>
 </div>
 
-<div *ngIf="loading" style="text-align:center;padding:3rem;color:var(--ink-faint);">Loading...</div>
+@if (loading) {
+  <div style="text-align:center;padding:3rem;color:var(--ink-faint);">Loading...</div>
+}
 
-<table class="users-table" *ngIf="!loading">
-  <thead>
-    <tr>
-      <th>Name</th>
-      <th>Email</th>
-      <th>Branch</th>
-      <th>Resource Types</th>
-      <th>Shift</th>
-      <th>Phone</th>
-      <th>Status</th>
-      <th>Actions</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr *ngFor="let e of pagedRows">
-      <td>
-        <div style="font-weight:600;">{{e.name}}</div>
-        <div *ngIf="e.jobTitle" style="font-size:.75rem;color:var(--ink-light);">{{e.jobTitle}}</div>
-      </td>
-      <td style="font-size:.82rem;">{{e.email || '—'}}</td>
-      <td style="font-size:.82rem;">{{e.branchName}}</td>
-      <td>
-        <div class="branch-tags">
-          <span class="branch-tag resource-tag" *ngFor="let rt of e.resourceTypes">{{rt}}</span>
-          <span *ngIf="e.resourceTypes.length === 0" style="color:var(--ink-faint);font-size:.75rem;">—</span>
-        </div>
-      </td>
-      <td>
-        <span class="shift-badge" [class]="e.defaultShift === 'AM' ? 'am' : 'pm'">
-          {{e.defaultShift}}
-        </span>
-      </td>
-      <td style="font-size:.82rem;">{{e.workPhone || e.workMobilePhone || '—'}}</td>
-      <td>
-        <span class="status-pill" [class]="e.isActive ? 'green' : 'red'">
-          {{e.isActive ? 'Active' : 'Inactive'}}
-        </span>
-      </td>
-      <td>
-        <button class="btn-ghost btn-sm" (click)="openEdit(e)" style="margin-right:.4rem;">Edit</button>
-        <button class="btn-danger btn-sm" (click)="deactivate(e)"
-                *ngIf="e.isActive" [disabled]="saving">Deactivate</button>
-      </td>
-    </tr>
-    <tr *ngIf="filtered.length === 0">
-      <td colspan="8" style="text-align:center;color:var(--ink-faint);padding:2rem;">
-        {{employees.length === 0 ? 'No technicians found.' : 'No results match "' + searchText + '".'}}
-      </td>
-    </tr>
-  </tbody>
-</table>
+@if (!loading) {
+  <table class="users-table">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Email</th>
+        <th>Branch</th>
+        <th>Resource Types</th>
+        <th>Shift</th>
+        <th>Phone</th>
+        <th>Status</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (e of pagedRows; track e) {
+        <tr>
+          <td>
+            <div style="font-weight:600;">{{e.name}}</div>
+            @if (e.jobTitle) {
+              <div style="font-size:.75rem;color:var(--ink-light);">{{e.jobTitle}}</div>
+            }
+          </td>
+          <td style="font-size:.82rem;">{{e.email || '—'}}</td>
+          <td style="font-size:.82rem;">{{e.branchName}}</td>
+          <td>
+            <div class="branch-tags">
+              @for (rt of e.resourceTypes; track rt) {
+                <span class="branch-tag resource-tag">{{rt}}</span>
+              }
+              @if (e.resourceTypes.length === 0) {
+                <span style="color:var(--ink-faint);font-size:.75rem;">—</span>
+              }
+            </div>
+          </td>
+          <td>
+            <span class="shift-badge" [class]="e.defaultShift === 'AM' ? 'am' : 'pm'">
+              {{e.defaultShift}}
+            </span>
+          </td>
+          <td style="font-size:.82rem;">{{e.workPhone || e.workMobilePhone || '—'}}</td>
+          <td>
+            <span class="status-pill" [class]="e.isActive ? 'green' : 'red'">
+              {{e.isActive ? 'Active' : 'Inactive'}}
+            </span>
+          </td>
+          <td>
+            <button class="btn-ghost btn-sm" (click)="openEdit(e)" style="margin-right:.4rem;">Edit</button>
+            @if (e.isActive) {
+              <button class="btn-danger btn-sm" (click)="deactivate(e)"
+              [disabled]="saving">Deactivate</button>
+            }
+          </td>
+        </tr>
+      }
+      @if (filtered.length === 0) {
+        <tr>
+          <td colspan="8" style="text-align:center;color:var(--ink-faint);padding:2rem;">
+            {{employees.length === 0 ? 'No technicians found.' : 'No results match "' + searchText + '".'}}
+          </td>
+        </tr>
+      }
+    </tbody>
+  </table>
+}
 
 <!-- Paging footer -->
-<div class="dashboard-footer" *ngIf="!loading && employees.length > 0">
-  <span>Showing {{pageStart}}–{{pageEnd}} of {{filtered.length}} technician{{filtered.length !== 1 ? 's' : ''}}
-        ({{activeCount}} active)</span>
-  <div class="paging-controls" *ngIf="totalPages > 1">
-    <button class="btn-icon" (click)="goPage(currentPage - 1)" [disabled]="currentPage === 1">‹</button>
-    <span style="font-size:.82rem;">Page {{currentPage}} of {{totalPages}}</span>
-    <button class="btn-icon" (click)="goPage(currentPage + 1)" [disabled]="currentPage === totalPages">›</button>
+@if (!loading && employees.length > 0) {
+  <div class="dashboard-footer">
+    <span>Showing {{pageStart}}–{{pageEnd}} of {{filtered.length}} technician{{filtered.length !== 1 ? 's' : ''}}
+    ({{activeCount}} active)</span>
+    @if (totalPages > 1) {
+      <div class="paging-controls">
+        <button class="btn-icon" (click)="goPage(currentPage - 1)" [disabled]="currentPage === 1">‹</button>
+        <span style="font-size:.82rem;">Page {{currentPage}} of {{totalPages}}</span>
+        <button class="btn-icon" (click)="goPage(currentPage + 1)" [disabled]="currentPage === totalPages">›</button>
+      </div>
+    }
   </div>
-</div>
+}
 
 <!-- Modal -->
-<div class="modal-overlay" *ngIf="showModal" (click)="onOverlayClick($event)">
-  <div class="modal-card modal-wide" (click)="$event.stopPropagation()">
-    <div class="modal-header">
-      {{modalMode === 'create' ? 'New Technician' : 'Edit Technician'}}
-      <button class="btn-icon" (click)="closeModal()">✕</button>
-    </div>
-    <div class="modal-body">
-
-      <!-- Row 1: Name + Email -->
-      <div class="form-row-2">
-        <div class="field">
-          <label>Full Name <span class="req">*</span></label>
-          <input type="text" [(ngModel)]="form.name" placeholder="Full name" />
-        </div>
-        <div class="field">
-          <label>Email</label>
-          <input type="email" [(ngModel)]="form.email" placeholder="email@example.com" />
-        </div>
+@if (showModal) {
+  <div class="modal-overlay" (click)="onOverlayClick($event)">
+    <div class="modal-card modal-wide" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        {{modalMode === 'create' ? 'New Technician' : 'Edit Technician'}}
+        <button class="btn-icon" (click)="closeModal()">✕</button>
       </div>
-
-      <!-- Row 2: Job Title + Branch -->
-      <div class="form-row-2">
-        <div class="field">
-          <label>Job Title</label>
-          <input type="text" [(ngModel)]="form.jobTitle" placeholder="e.g. Driver, Driver Trainee" />
-        </div>
-        <div class="field">
-          <label>Branch <span class="req">*</span></label>
-          <select [(ngModel)]="form.branchId">
-            <option [value]="0">Select branch...</option>
-            <option *ngFor="let b of branches" [value]="b.id">{{b.name}}</option>
-          </select>
-        </div>
-      </div>
-
-      <!-- Row 3: Default Shift + Manager -->
-      <div class="form-row-2">
-        <div class="field">
-          <label>Default Shift</label>
-          <div class="shift-toggle">
-            <button class="shift-opt" [class.active]="form.defaultShift === 'AM'"
-                    (click)="form.defaultShift = 'AM'">AM</button>
-            <button class="shift-opt" [class.active]="form.defaultShift === 'PM'"
-                    (click)="form.defaultShift = 'PM'">PM</button>
+      <div class="modal-body">
+        <!-- Row 1: Name + Email -->
+        <div class="form-row-2">
+          <div class="field">
+            <label>Full Name <span class="req">*</span></label>
+            <input type="text" [(ngModel)]="form.name" placeholder="Full name" />
+          </div>
+          <div class="field">
+            <label>Email</label>
+            <input type="email" [(ngModel)]="form.email" placeholder="email@example.com" />
           </div>
         </div>
+        <!-- Row 2: Job Title + Branch -->
+        <div class="form-row-2">
+          <div class="field">
+            <label>Job Title</label>
+            <input type="text" [(ngModel)]="form.jobTitle" placeholder="e.g. Driver, Driver Trainee" />
+          </div>
+          <div class="field">
+            <label>Branch <span class="req">*</span></label>
+            <select [(ngModel)]="form.branchId">
+              <option [value]="0">Select branch...</option>
+              @for (b of branches; track b) {
+                <option [value]="b.id">{{b.name}}</option>
+              }
+            </select>
+          </div>
+        </div>
+        <!-- Row 3: Default Shift + Manager -->
+        <div class="form-row-2">
+          <div class="field">
+            <label>Default Shift</label>
+            <div class="shift-toggle">
+              <button class="shift-opt" [class.active]="form.defaultShift === 'AM'"
+              (click)="form.defaultShift = 'AM'">AM</button>
+              <button class="shift-opt" [class.active]="form.defaultShift === 'PM'"
+              (click)="form.defaultShift = 'PM'">PM</button>
+            </div>
+          </div>
+          <div class="field">
+            <label>Manager Name</label>
+            <input type="text" [(ngModel)]="form.managerName" placeholder="Manager" />
+          </div>
+        </div>
+        <!-- Row 4: Truck + Truck ID -->
+        <div class="form-row-2">
+          <div class="field">
+            <label>Truck Assignment</label>
+            <input type="text" [(ngModel)]="form.truckAssignment" placeholder="e.g. 3,800g" />
+          </div>
+          <div class="field">
+            <label>Truck ID</label>
+            <input type="text" [(ngModel)]="form.truckId" placeholder="e.g. #PJ1709" />
+          </div>
+        </div>
+        <!-- Row 5: Phones -->
+        <div class="form-row-2">
+          <div class="field">
+            <label>Work Phone</label>
+            <input type="text" [(ngModel)]="form.workPhone" placeholder="(555) 555-0100" />
+          </div>
+          <div class="field">
+            <label>Mobile Phone</label>
+            <input type="text" [(ngModel)]="form.workMobilePhone" placeholder="(555) 555-0100" />
+          </div>
+        </div>
+        <!-- Resource Types -->
         <div class="field">
-          <label>Manager Name</label>
-          <input type="text" [(ngModel)]="form.managerName" placeholder="Manager" />
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.35rem;">
+            <label style="margin:0;">Resource Types</label>
+            <label class="checkbox-item" style="margin:0;font-size:.8rem;color:var(--ink-light);gap:.3rem;">
+              <input type="checkbox"
+                [checked]="allTypesChecked"
+                [indeterminate]="someTypesChecked"
+                (change)="toggleAllTypes($event)" />
+              All
+            </label>
+          </div>
+          <div class="checkbox-grid scrollable-panel">
+            @for (rt of allResourceTypes; track rt) {
+              <label class="checkbox-item">
+                <input type="checkbox"
+                  [checked]="form.resourceTypes.includes(rt)"
+                  (change)="toggleResourceType(rt, $event)" />
+                {{rt}}
+              </label>
+            }
+          </div>
         </div>
+        <!-- Active toggle (edit only) -->
+        @if (modalMode === 'edit') {
+          <div class="field">
+            <label class="checkbox-item" style="gap:.5rem;">
+              <input type="checkbox" [(ngModel)]="form.isActive" />
+              Active
+            </label>
+          </div>
+        }
+        @if (modalError) {
+          <p style="color:#dc2626;font-size:.82rem;margin-top:.5rem;">{{modalError}}</p>
+        }
       </div>
-
-      <!-- Row 4: Truck + Truck ID -->
-      <div class="form-row-2">
-        <div class="field">
-          <label>Truck Assignment</label>
-          <input type="text" [(ngModel)]="form.truckAssignment" placeholder="e.g. 3,800g" />
-        </div>
-        <div class="field">
-          <label>Truck ID</label>
-          <input type="text" [(ngModel)]="form.truckId" placeholder="e.g. #PJ1709" />
-        </div>
+      <div class="modal-footer">
+        <button class="btn-ghost" (click)="closeModal()" [disabled]="saving">Cancel</button>
+        <button class="btn-primary" (click)="saveModal()" [disabled]="saving">
+          {{saving ? 'Saving...' : 'Save'}}
+        </button>
       </div>
-
-      <!-- Row 5: Phones -->
-      <div class="form-row-2">
-        <div class="field">
-          <label>Work Phone</label>
-          <input type="text" [(ngModel)]="form.workPhone" placeholder="(555) 555-0100" />
-        </div>
-        <div class="field">
-          <label>Mobile Phone</label>
-          <input type="text" [(ngModel)]="form.workMobilePhone" placeholder="(555) 555-0100" />
-        </div>
-      </div>
-
-      <!-- Resource Types -->
-      <div class="field">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.35rem;">
-          <label style="margin:0;">Resource Types</label>
-          <label class="checkbox-item" style="margin:0;font-size:.8rem;color:var(--ink-light);gap:.3rem;">
-            <input type="checkbox"
-                   [checked]="allTypesChecked"
-                   [indeterminate]="someTypesChecked"
-                   (change)="toggleAllTypes($event)" />
-            All
-          </label>
-        </div>
-        <div class="checkbox-grid scrollable-panel">
-          <label class="checkbox-item" *ngFor="let rt of allResourceTypes">
-            <input type="checkbox"
-                   [checked]="form.resourceTypes.includes(rt)"
-                   (change)="toggleResourceType(rt, $event)" />
-            {{rt}}
-          </label>
-        </div>
-      </div>
-
-      <!-- Active toggle (edit only) -->
-      <div class="field" *ngIf="modalMode === 'edit'">
-        <label class="checkbox-item" style="gap:.5rem;">
-          <input type="checkbox" [(ngModel)]="form.isActive" />
-          Active
-        </label>
-      </div>
-
-      <p *ngIf="modalError" style="color:#dc2626;font-size:.82rem;margin-top:.5rem;">{{modalError}}</p>
-    </div>
-    <div class="modal-footer">
-      <button class="btn-ghost" (click)="closeModal()" [disabled]="saving">Cancel</button>
-      <button class="btn-primary" (click)="saveModal()" [disabled]="saving">
-        {{saving ? 'Saving...' : 'Save'}}
-      </button>
     </div>
   </div>
-</div>
-  `,
+}
+`,
   styles: [`
     .search-wrap {
       position: relative;

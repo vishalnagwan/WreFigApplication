@@ -17,9 +17,11 @@ const MONTH_NAMES = [
   <h1>Month Rollover Console</h1>
 </div>
 
-<div *ngIf="loading" style="text-align:center;padding:3rem;color:var(--ink-faint);">Loading...</div>
+@if (loading) {
+  <div style="text-align:center;padding:3rem;color:var(--ink-faint);">Loading...</div>
+}
 
-<ng-container *ngIf="!loading">
+@if (!loading) {
   <!-- KPI row -->
   <div class="kpi-row">
     <div class="kpi-card green">
@@ -35,9 +37,9 @@ const MONTH_NAMES = [
       <div class="kpi-label">Current Month</div>
     </div>
   </div>
-
-  <div class="status-callout" *ngIf="statusMessage">{{statusMessage}}</div>
-
+  @if (statusMessage) {
+    <div class="status-callout">{{statusMessage}}</div>
+  }
   <!-- Table -->
   <table class="rollover-table">
     <thead>
@@ -50,45 +52,52 @@ const MONTH_NAMES = [
       </tr>
     </thead>
     <tbody>
-      <tr *ngFor="let lock of locks">
-        <td>{{monthLabel(lock.year, lock.month)}}</td>
-        <td>
-          <span [class]="lock.isOpen ? 'pill-green' : 'pill-gray'">
-            {{lock.isOpen ? 'Open' : 'Closed'}}
-          </span>
-        </td>
-        <td style="font-size:.75rem;font-family:'DM Mono',monospace;">
-          {{lock.modifiedAt | date:'MM/dd/yyyy HH:mm'}}
-        </td>
-        <td>{{lock.modifiedBy}}</td>
-        <td>
-          <button *ngIf="!lock.isOpen" class="btn-ghost btn-sm"
-                  (click)="openLock(lock)" [disabled]="saving">Open</button>
-          <button *ngIf="lock.isOpen" class="btn-ghost btn-sm"
-                  (click)="closeLock(lock)" [disabled]="saving">Close</button>
-        </td>
-      </tr>
-      <tr *ngIf="locks.length === 0">
-        <td colspan="5" style="text-align:center;color:var(--ink-faint);padding:2rem;">
-          No month locks found.
-        </td>
-      </tr>
+      @for (lock of locks; track lock) {
+        <tr>
+          <td>{{monthLabel(lock.year, lock.month)}}</td>
+          <td>
+            <span [class]="lock.isOpen ? 'pill-green' : 'pill-gray'">
+              {{lock.isOpen ? 'Open' : 'Closed'}}
+            </span>
+          </td>
+          <td style="font-size:.75rem;font-family:'DM Mono',monospace;">
+            {{lock.modifiedAt | date:'MM/dd/yyyy HH:mm'}}
+          </td>
+          <td>{{lock.modifiedBy}}</td>
+          <td>
+            @if (!lock.isOpen) {
+              <button class="btn-ghost btn-sm"
+              (click)="openLock(lock)" [disabled]="saving">Open</button>
+            }
+            @if (lock.isOpen) {
+              <button class="btn-ghost btn-sm"
+              (click)="closeLock(lock)" [disabled]="saving">Close</button>
+            }
+          </td>
+        </tr>
+      }
+      @if (locks.length === 0) {
+        <tr>
+          <td colspan="5" style="text-align:center;color:var(--ink-faint);padding:2rem;">
+            No month locks found.
+          </td>
+        </tr>
+      }
     </tbody>
   </table>
-
   <!-- Quick actions -->
   <div class="quick-actions">
     <button class="btn-primary" (click)="openNextMonth()"
-            [disabled]="nextMonthAlreadyOpen || saving">
+      [disabled]="nextMonthAlreadyOpen || saving">
       Open Next Month
     </button>
     <button class="btn-primary" (click)="closePriorMonth()"
-            [disabled]="!priorMonthIsOpen || saving">
+      [disabled]="!priorMonthIsOpen || saving">
       Close Prior Month
     </button>
   </div>
-</ng-container>
-  `
+}
+`
 })
 export class RolloverComponent implements OnInit {
   private lockSvc = inject(MonthLockService);

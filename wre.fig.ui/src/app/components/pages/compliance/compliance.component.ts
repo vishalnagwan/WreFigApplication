@@ -25,9 +25,11 @@ interface RegionGroup {
   </div>
 </div>
 
-<div *ngIf="loading" style="text-align:center;padding:3rem;color:var(--ink-faint);">Loading...</div>
+@if (loading) {
+  <div style="text-align:center;padding:3rem;color:var(--ink-faint);">Loading...</div>
+}
 
-<ng-container *ngIf="!loading && compliance">
+@if (!loading && compliance) {
   <!-- KPI row -->
   <div class="kpi-row">
     <div class="kpi-card">
@@ -43,45 +45,46 @@ interface RegionGroup {
       <div class="kpi-label">Needs Attention (&lt;75%)</div>
     </div>
   </div>
-
   <!-- Regions -->
-  <div *ngFor="let region of regionGroups" class="region-group">
-
-    <!-- Region header -->
-    <div class="region-header">
-      <span class="region-name">{{region.name}}</span>
-      <span class="region-meta">{{region.rows.length}} branch{{region.rows.length !== 1 ? 'es' : ''}}</span>
+  @for (region of regionGroups; track region) {
+    <div class="region-group">
+      <!-- Region header -->
+      <div class="region-header">
+        <span class="region-name">{{region.name}}</span>
+        <span class="region-meta">{{region.rows.length}} branch{{region.rows.length !== 1 ? 'es' : ''}}</span>
+      </div>
+      <!-- Table per region -->
+      <table class="compliance-table">
+        <thead>
+          <tr>
+            <th>Branch</th>
+            <th>Fill Rate</th>
+            <th>Days Complete</th>
+            <th>Last Updated</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (row of region.rows; track row) {
+            <tr
+              [routerLink]="['/schedule', row.branchId]"
+              [queryParams]="{year: year, month: month}"
+              class="clickable">
+              <td>{{row.branchName}}</td>
+              <td style="min-width:120px;">
+                <app-fill-bar [pct]="row.fillRate"></app-fill-bar>
+              </td>
+              <td>{{row.daysComplete}}/{{row.totalWorkdays}}</td>
+              <td>{{row.lastUpdated ? (row.lastUpdated | date:'MM/dd') : '—'}}</td>
+              <td><span class="status-pill" [class]="row.status">{{statusLabel(row.status)}}</span></td>
+            </tr>
+          }
+        </tbody>
+      </table>
     </div>
-
-    <!-- Table per region -->
-    <table class="compliance-table">
-      <thead>
-        <tr>
-          <th>Branch</th>
-          <th>Fill Rate</th>
-          <th>Days Complete</th>
-          <th>Last Updated</th>
-          <th>Status</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let row of region.rows"
-            [routerLink]="['/schedule', row.branchId]"
-            [queryParams]="{year: year, month: month}"
-            class="clickable">
-          <td>{{row.branchName}}</td>
-          <td style="min-width:120px;">
-            <app-fill-bar [pct]="row.fillRate"></app-fill-bar>
-          </td>
-          <td>{{row.daysComplete}}/{{row.totalWorkdays}}</td>
-          <td>{{row.lastUpdated ? (row.lastUpdated | date:'MM/dd') : '—'}}</td>
-          <td><span class="status-pill" [class]="row.status">{{statusLabel(row.status)}}</span></td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-</ng-container>
-  `,
+  }
+}
+`,
   styles: [`
     .region-group {
       margin-bottom: 1.5rem;

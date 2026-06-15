@@ -121,7 +121,9 @@ const ACTION_LABELS: Record<string, string> = {
   `],
   template: `
 <div class="page-header">
-  <h1>Alerts <span class="badge" *ngIf="unreadCount > 0">{{unreadCount}}</span></h1>
+  <h1>Alerts @if (unreadCount > 0) {
+    <span class="badge">{{unreadCount}}</span>
+  }</h1>
   <div class="filter-row" style="margin-left:auto;">
     <button [class.active]="filter === 'all'"    (click)="setFilter('all')">All</button>
     <button [class.active]="filter === 'unread'" (click)="setFilter('unread')">Unread</button>
@@ -129,35 +131,41 @@ const ACTION_LABELS: Record<string, string> = {
   </div>
 </div>
 
-<div *ngIf="loading"
-     style="text-align:center;padding:3rem;color:var(--ink-faint);">Loading alerts...</div>
+@if (loading) {
+  <div
+  style="text-align:center;padding:3rem;color:var(--ink-faint);">Loading alerts...</div>
+}
 
-<div *ngIf="!loading && groupedAlerts.length === 0"
-     style="text-align:center;padding:3rem;color:var(--ink-faint);">No alerts to display.</div>
+@if (!loading && groupedAlerts.length === 0) {
+  <div
+  style="text-align:center;padding:3rem;color:var(--ink-faint);">No alerts to display.</div>
+}
 
-<ng-container *ngFor="let group of groupedAlerts">
+@for (group of groupedAlerts; track group) {
   <!-- Group header -->
   <div class="alert-group-header">
     <span class="group-label">{{group.label}}</span>
-    <div class="group-line" [ngClass]="group.cssClass"></div>
+    <div class="group-line" [class]="group.cssClass"></div>
   </div>
-
   <!-- Alert cards -->
-  <div class="alert-card"
-       *ngFor="let a of group.alerts"
-       [class.unread]="isUnread(a)">
-    <div class="urgency-bar" [ngClass]="group.cssClass"></div>
-    <div class="alert-body">
-      <div class="alert-title">{{alertTitle(a)}}</div>
-      <div class="alert-detail" *ngIf="hasDetail(a)">{{a.description}}</div>
-      <div class="alert-tags">
-        <span class="time-badge" [ngClass]="group.cssClass">{{group.timeBadge}}</span>
-        <span class="alert-meta">{{a.entityType}} · {{a.performedBy}}</span>
+  @for (a of group.alerts; track a) {
+    <div class="alert-card"
+      [class.unread]="isUnread(a)">
+      <div class="urgency-bar" [class]="group.cssClass"></div>
+      <div class="alert-body">
+        <div class="alert-title">{{alertTitle(a)}}</div>
+        @if (hasDetail(a)) {
+          <div class="alert-detail">{{a.description}}</div>
+        }
+        <div class="alert-tags">
+          <span class="time-badge" [class]="group.cssClass">{{group.timeBadge}}</span>
+          <span class="alert-meta">{{a.entityType}} · {{a.performedBy}}</span>
+        </div>
       </div>
     </div>
-  </div>
-</ng-container>
-  `
+  }
+}
+`
 })
 export class AlertsComponent implements OnInit {
   private auditSvc = inject(AuditService);

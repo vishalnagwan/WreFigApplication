@@ -1,5 +1,5 @@
 import { Component, OnInit, inject } from '@angular/core';
-import { CommonModule }    from '@angular/common';
+
 import { FormsModule }     from '@angular/forms';
 import { FeedbackService } from '../../../services/feedback.service';
 import { FeedbackItemDto } from '../../../models/feedback.model';
@@ -9,7 +9,7 @@ const PAGE_ORDER = ['Home', 'Schedule', 'Compliance', 'Alerts', 'Users', 'Techni
 @Component({
   selector:   'app-feedback-report',
   standalone: true,
-  imports:    [CommonModule, FormsModule],
+  imports: [FormsModule],
   styles: [`
     :host { display: block; font-family: 'Inter', sans-serif; }
 
@@ -116,10 +116,11 @@ const PAGE_ORDER = ['Home', 'Schedule', 'Compliance', 'Alerts', 'Users', 'Techni
     </span>
   </div>
 
-  <div *ngIf="loading" class="loading">Loading feedback…</div>
+  @if (loading) {
+    <div class="loading">Loading feedback…</div>
+  }
 
-  <ng-container *ngIf="!loading">
-
+  @if (!loading) {
     <!-- Stats -->
     <div class="stats-row">
       <div class="stat-card">
@@ -135,74 +136,76 @@ const PAGE_ORDER = ['Home', 'Schedule', 'Compliance', 'Alerts', 'Users', 'Techni
         <div class="stat-label">Implemented</div>
       </div>
     </div>
-
     <!-- Filters -->
     <div class="report-filters">
       <label>Filter:</label>
       <button class="filter-btn" [class.active]="statusFilter === 'all'"
-              (click)="statusFilter = 'all'">All</button>
+      (click)="statusFilter = 'all'">All</button>
       <button class="filter-btn" [class.active]="statusFilter === 'pending'"
-              (click)="statusFilter = 'pending'">Pending</button>
+      (click)="statusFilter = 'pending'">Pending</button>
       <button class="filter-btn" [class.active]="statusFilter === 'implemented'"
-              (click)="statusFilter = 'implemented'">Implemented</button>
-
+      (click)="statusFilter = 'implemented'">Implemented</button>
       <span style="margin-left:.75rem;"></span>
       <label>Page:</label>
       <button class="filter-btn" [class.active]="pageFilter === ''"
-              (click)="pageFilter = ''">All Pages</button>
-      <button class="filter-btn"
-              *ngFor="let p of pageOrder"
-              [class.active]="pageFilter === p"
-              (click)="pageFilter = p">{{p}}</button>
+      (click)="pageFilter = ''">All Pages</button>
+      @for (p of pageOrder; track p) {
+        <button class="filter-btn"
+          [class.active]="pageFilter === p"
+        (click)="pageFilter = p">{{p}}</button>
+      }
     </div>
-
     <!-- Groups by page -->
-    <div class="page-group" *ngFor="let group of visibleGroups">
-      <div class="page-group-header">
-        <h2>{{group.page}}</h2>
-        <span class="count-badge">{{group.items.length}}</span>
+    @for (group of visibleGroups; track group) {
+      <div class="page-group">
+        <div class="page-group-header">
+          <h2>{{group.page}}</h2>
+          <span class="count-badge">{{group.items.length}}</span>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Category</th>
+              <th>Comment</th>
+              <th>Submitted by</th>
+              <th>Date</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (item of group.items; track item) {
+              <tr>
+                <td class="meta-text">{{item.id}}</td>
+                <td><span class="category-tag">{{item.category}}</span></td>
+                <td><div class="comment-text">{{item.comment}}</div></td>
+                <td class="meta-text">{{item.userName}}</td>
+                <td class="meta-text">{{formatDate(item.createdAt)}}</td>
+                <td>
+                  <span class="done-badge" [class.yes]="item.isImplemented" [class.no]="!item.isImplemented">
+                    {{item.isImplemented ? '✓ Implemented' : '○ Pending'}}
+                  </span>
+                </td>
+                <td>
+                  <button class="toggle-btn"
+                    [class.toggling]="toggling.has(item.id)"
+                    (click)="toggle(item)">
+                    {{item.isImplemented ? 'Mark Pending' : 'Mark Implemented'}}
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
       </div>
-      <table>
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>Category</th>
-            <th>Comment</th>
-            <th>Submitted by</th>
-            <th>Date</th>
-            <th>Status</th>
-            <th>Action</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let item of group.items">
-            <td class="meta-text">{{item.id}}</td>
-            <td><span class="category-tag">{{item.category}}</span></td>
-            <td><div class="comment-text">{{item.comment}}</div></td>
-            <td class="meta-text">{{item.userName}}</td>
-            <td class="meta-text">{{formatDate(item.createdAt)}}</td>
-            <td>
-              <span class="done-badge" [class.yes]="item.isImplemented" [class.no]="!item.isImplemented">
-                {{item.isImplemented ? '✓ Implemented' : '○ Pending'}}
-              </span>
-            </td>
-            <td>
-              <button class="toggle-btn"
-                      [class.toggling]="toggling.has(item.id)"
-                      (click)="toggle(item)">
-                {{item.isImplemented ? 'Mark Pending' : 'Mark Implemented'}}
-              </button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
-    <div class="empty" *ngIf="visibleGroups.length === 0">No feedback matches the current filters.</div>
-
-  </ng-container>
+    }
+    @if (visibleGroups.length === 0) {
+      <div class="empty">No feedback matches the current filters.</div>
+    }
+  }
 </div>
-  `
+`
 })
 export class FeedbackReportComponent implements OnInit {
   private feedbackSvc = inject(FeedbackService);

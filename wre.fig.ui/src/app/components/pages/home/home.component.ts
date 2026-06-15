@@ -24,7 +24,7 @@ interface RegionGroup {
     <div style="display:flex;flex-direction:column;align-items:flex-end;gap:.4rem;">
       <div class="home-search-wrap">
         <input type="text" class="home-search-input" placeholder="Search branches..."
-               [(ngModel)]="searchText" (ngModelChange)="applyFilter()" />
+          [(ngModel)]="searchText" (ngModelChange)="applyFilter()" />
         <button class="btn-icon home-refresh-btn" (click)="load()" title="Refresh">↺</button>
       </div>
       <div class="month-nav-btns">
@@ -37,54 +37,71 @@ interface RegionGroup {
   </div>
 </div>
 
-<div *ngIf="loading" style="text-align:center;padding:3rem;color:var(--ink-faint);">
-  <div style="font-size:1.5rem;margin-bottom:.5rem;">Loading...</div>
-  Loading branches...
-</div>
-
-<div *ngIf="!loading && error" style="text-align:center;padding:3rem;">
-  <div style="color:#e53e3e;font-weight:600;margin-bottom:.75rem;">Could not load branches</div>
-  <div style="color:var(--ink-faint);font-size:.85rem;margin-bottom:1rem;">{{error}}</div>
-  <button class="btn-primary" (click)="load()">Retry</button>
-</div>
-
-<div *ngIf="!loading && !error && summaries.length === 0"
-     style="text-align:center;padding:3rem;color:var(--ink-faint);">
-  No branches available for your account.
-</div>
-
-<div *ngIf="!loading && !error && filtered.length === 0 && searchText && summaries.length > 0"
-     style="text-align:center;padding:2rem;color:var(--ink-faint);">
-  No branches match "{{searchText}}".
-</div>
-
-<div *ngFor="let group of grouped" class="region-group">
-  <div class="region-header">
-    <span class="region-name">{{group.region | uppercase}} · {{group.branches.length}} FIELD OFFICE{{group.branches.length === 1 ? '' : 'S'}}</span>
-    <span class="attention-badge" *ngIf="attentionCount(group.branches) > 0">
-      {{attentionCount(group.branches)}} need attention
-    </span>
-    <span class="all-ok-badge" *ngIf="attentionCount(group.branches) === 0">
-      All up to date
-    </span>
+@if (loading) {
+  <div style="text-align:center;padding:3rem;color:var(--ink-faint);">
+    <div style="font-size:1.5rem;margin-bottom:.5rem;">Loading...</div>
+    Loading branches...
   </div>
-  <div class="branch-card-grid">
-    <app-branch-card
-      *ngFor="let b of group.branches"
-      [summary]="b"
-      [isPinned]="pinnedIds.has(b.branchId)"
-      [hasUnviewedNotes]="b.hasNotes"
-      (cardClick)="goToSchedule(b.branchId)"
-      (togglePin)="togglePin(b.branchId)">
-    </app-branch-card>
-  </div>
-</div>
+}
 
-<div class="dashboard-footer" *ngIf="!loading && !error && summaries.length > 0">
-  <span>Showing {{filtered.length}} of {{summaries.length}} · click a field office to open schedule</span>
-  <span>{{monthLabel}} fill rates</span>
-</div>
-  `
+@if (!loading && error) {
+  <div style="text-align:center;padding:3rem;">
+    <div style="color:#e53e3e;font-weight:600;margin-bottom:.75rem;">Could not load branches</div>
+    <div style="color:var(--ink-faint);font-size:.85rem;margin-bottom:1rem;">{{error}}</div>
+    <button class="btn-primary" (click)="load()">Retry</button>
+  </div>
+}
+
+@if (!loading && !error && summaries.length === 0) {
+  <div
+    style="text-align:center;padding:3rem;color:var(--ink-faint);">
+    No branches available for your account.
+  </div>
+}
+
+@if (!loading && !error && filtered.length === 0 && searchText && summaries.length > 0) {
+  <div
+    style="text-align:center;padding:2rem;color:var(--ink-faint);">
+    No branches match "{{searchText}}".
+  </div>
+}
+
+@for (group of grouped; track group) {
+  <div class="region-group">
+    <div class="region-header">
+      <span class="region-name">{{group.region | uppercase}} · {{group.branches.length}} FIELD OFFICE{{group.branches.length === 1 ? '' : 'S'}}</span>
+      @if (attentionCount(group.branches) > 0) {
+        <span class="attention-badge">
+          {{attentionCount(group.branches)}} need attention
+        </span>
+      }
+      @if (attentionCount(group.branches) === 0) {
+        <span class="all-ok-badge">
+          All up to date
+        </span>
+      }
+    </div>
+    <div class="branch-card-grid">
+      @for (b of group.branches; track b) {
+        <app-branch-card
+          [summary]="b"
+          [isPinned]="pinnedIds.has(b.branchId)"
+          [hasUnviewedNotes]="b.hasNotes"
+          (cardClick)="goToSchedule(b.branchId)"
+          (togglePin)="togglePin(b.branchId)">
+        </app-branch-card>
+      }
+    </div>
+  </div>
+}
+
+@if (!loading && !error && summaries.length > 0) {
+  <div class="dashboard-footer">
+    <span>Showing {{filtered.length}} of {{summaries.length}} · click a field office to open schedule</span>
+    <span>{{monthLabel}} fill rates</span>
+  </div>
+}
+`
 })
 export class HomeComponent implements OnInit {
   private branchSvc = inject(BranchService);

@@ -1,5 +1,5 @@
 import { Component, Optional }        from '@angular/core';
-import { CommonModule }               from '@angular/common';
+
 import { FormsModule }                from '@angular/forms';
 import { Router, ActivatedRoute }     from '@angular/router';
 import { AuthService }                from '../../../services/auth.service';
@@ -9,7 +9,7 @@ import { environment }                from '../../../../environments/environment
 @Component({
   selector:   'app-login',
   standalone: true,
-  imports:    [CommonModule, FormsModule],
+  imports: [FormsModule],
   template: `
 <div class="login-wrapper">
   <div class="login-card">
@@ -17,14 +17,14 @@ import { environment }                from '../../../../environments/environment
     <!-- Logo -->
     <div class="login-logo">
       <img src="assets/images/wre-logo.png"
-           alt="Wind River Environmental"
-           class="login-logo-img" />
+        alt="Wind River Environmental"
+        class="login-logo-img" />
     </div>
 
     <h2 class="login-heading">Sign In</h2>
 
     <!-- Microsoft login button — shown only in MSAL mode -->
-    <ng-container *ngIf="msalMode">
+    @if (msalMode) {
       <button class="btn-microsoft" (click)="loginMicrosoft()" [disabled]="msalLoading">
         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 21 21">
           <rect x="1"  y="1"  width="9" height="9" fill="#f25022"/>
@@ -34,49 +34,50 @@ import { environment }                from '../../../../environments/environment
         </svg>
         {{ msalLoading ? 'Redirecting...' : 'Sign in with Microsoft' }}
       </button>
-
       <!-- Divider — only show when form login is also available -->
-      <div class="login-divider" *ngIf="showFormAuth">
-        <span>or</span>
-      </div>
-    </ng-container>
+      @if (showFormAuth) {
+        <div class="login-divider">
+          <span>or</span>
+        </div>
+      }
+    }
 
     <!-- Form-based login — hidden in MSAL-only mode (e.g. production) -->
-    <ng-container *ngIf="showFormAuth">
+    @if (showFormAuth) {
       <div class="field">
         <label for="email">Email</label>
         <input id="email" type="email" [(ngModel)]="email"
-               placeholder=""
-               (keydown.enter)="login()"
-               autocomplete="email" />
+          placeholder=""
+          (keydown.enter)="login()"
+          autocomplete="email" />
       </div>
-
       <div class="field">
         <label for="password">Password</label>
         <input id="password" type="password" [(ngModel)]="password"
-               placeholder=""
-               (keydown.enter)="login()"
-               autocomplete="current-password" />
+          placeholder=""
+          (keydown.enter)="login()"
+          autocomplete="current-password" />
       </div>
-
       <div class="login-remember">
         <input id="remember" type="checkbox" [(ngModel)]="rememberMe" />
         <label for="remember">Remember me</label>
       </div>
-    </ng-container>
+    }
 
-    <p class="login-error" *ngIf="error">{{ error }}</p>
+    @if (error) {
+      <p class="login-error">{{ error }}</p>
+    }
 
-    <ng-container *ngIf="showFormAuth">
+    @if (showFormAuth) {
       <button class="btn-primary login-btn"
-              (click)="login()" [disabled]="loading">
+        (click)="login()" [disabled]="loading">
         {{ loading ? 'Signing in...' : 'Sign In' }}
       </button>
-    </ng-container>
+    }
 
   </div>
 </div>
-  `
+`
 })
 export class LoginComponent {
 

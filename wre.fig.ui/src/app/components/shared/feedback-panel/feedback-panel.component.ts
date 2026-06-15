@@ -1,5 +1,5 @@
 import { Component, Input, Output, EventEmitter, OnChanges, inject } from '@angular/core';
-import { CommonModule }    from '@angular/common';
+
 import { FormsModule }     from '@angular/forms';
 import { FeedbackService } from '../../../services/feedback.service';
 import { FeedbackItemDto } from '../../../models/feedback.model';
@@ -8,7 +8,7 @@ import { FEEDBACK_CATEGORIES, FEEDBACK_PLACEHOLDERS } from '../../../constant';
 @Component({
   selector:   'app-feedback-panel',
   standalone: true,
-  imports:    [CommonModule, FormsModule],
+  imports: [FormsModule],
   styles: [`
     .fb-overlay {
       position: fixed; inset: 0; z-index: 900;
@@ -160,78 +160,95 @@ import { FEEDBACK_CATEGORIES, FEEDBACK_PLACEHOLDERS } from '../../../constant';
 
   <div class="fb-body">
 
-    <div *ngIf="loading" class="fb-loading">Loading feedback…</div>
-    <div *ngIf="loadError" class="fb-load-error">{{loadError}}</div>
+    @if (loading) {
+      <div class="fb-loading">Loading feedback…</div>
+    }
+    @if (loadError) {
+      <div class="fb-load-error">{{loadError}}</div>
+    }
 
-    <div *ngIf="!loading && !loadError">
-      <div class="fb-cat-section" *ngFor="let cat of categories">
-
-        <!-- Category header (always visible, click to expand/collapse) -->
-        <div class="fb-cat-header" (click)="toggleExpand(cat)">
-          <span class="fb-cat-toggle">{{expanded.has(cat) ? '▾' : '▸'}}</span>
-          <span class="fb-cat-name">{{cat}}</span>
-          <span class="fb-cat-count" *ngIf="entriesFor(cat).length > 0">
-            {{entriesFor(cat).length}}
-          </span>
-          <span class="fb-cat-new-badge" *ngIf="newlyAdded.has(cat)">✓ Added</span>
-        </div>
-
-        <!-- Expanded body -->
-        <div class="fb-cat-body" *ngIf="expanded.has(cat)">
-
-          <!-- Existing entries -->
-          <div class="fb-entry" *ngFor="let e of entriesFor(cat)">
-            <div class="fb-entry-comment">{{e.comment}}</div>
-            <div class="fb-entry-meta">
-              {{e.userName}} · {{formatDate(e.createdAt)}}
-              <span class="fb-entry-implemented" *ngIf="e.isImplemented">✓ Implemented</span>
+    @if (!loading && !loadError) {
+      <div>
+        @for (cat of categories; track cat) {
+          <div class="fb-cat-section">
+            <!-- Category header (always visible, click to expand/collapse) -->
+            <div class="fb-cat-header" (click)="toggleExpand(cat)">
+              <span class="fb-cat-toggle">{{expanded.has(cat) ? '▾' : '▸'}}</span>
+              <span class="fb-cat-name">{{cat}}</span>
+              @if (entriesFor(cat).length > 0) {
+                <span class="fb-cat-count">
+                  {{entriesFor(cat).length}}
+                </span>
+              }
+              @if (newlyAdded.has(cat)) {
+                <span class="fb-cat-new-badge">✓ Added</span>
+              }
             </div>
-          </div>
-
-          <!-- Empty state (only when add form is closed) -->
-          <div class="fb-cat-empty"
-               *ngIf="entriesFor(cat).length === 0 && activeAddCat !== cat">
-            No feedback yet — be the first to add one.
-          </div>
-
-          <!-- Inline add form -->
-          <div class="fb-add-form" *ngIf="activeAddCat === cat">
-            <textarea [(ngModel)]="newComment"
+            <!-- Expanded body -->
+            @if (expanded.has(cat)) {
+              <div class="fb-cat-body">
+                <!-- Existing entries -->
+                @for (e of entriesFor(cat); track e) {
+                  <div class="fb-entry">
+                    <div class="fb-entry-comment">{{e.comment}}</div>
+                    <div class="fb-entry-meta">
+                      {{e.userName}} · {{formatDate(e.createdAt)}}
+                      @if (e.isImplemented) {
+                        <span class="fb-entry-implemented">✓ Implemented</span>
+                      }
+                    </div>
+                  </div>
+                }
+                <!-- Empty state (only when add form is closed) -->
+                @if (entriesFor(cat).length === 0 && activeAddCat !== cat) {
+                  <div class="fb-cat-empty"
+                    >
+                    No feedback yet — be the first to add one.
+                  </div>
+                }
+                <!-- Inline add form -->
+                @if (activeAddCat === cat) {
+                  <div class="fb-add-form">
+                    <textarea [(ngModel)]="newComment"
                       [placeholder]="placeholderFor(cat)"
                       (keydown.escape)="cancelAdd()">
-            </textarea>
-            <div class="fb-add-form-footer">
-              <button class="btn-primary btn-sm"
-                      (click)="submit(cat)"
-                      [disabled]="saving || !newComment.trim()">
-                {{saving ? 'Submitting…' : 'Submit'}}
-              </button>
-              <button class="btn-ghost btn-sm" (click)="cancelAdd()">Cancel</button>
-              <span class="fb-char-count" [class.warn]="newComment.length > 800">
-                {{newComment.length}} / 1000
-              </span>
-            </div>
+                    </textarea>
+                    <div class="fb-add-form-footer">
+                      <button class="btn-primary btn-sm"
+                        (click)="submit(cat)"
+                        [disabled]="saving || !newComment.trim()">
+                        {{saving ? 'Submitting…' : 'Submit'}}
+                      </button>
+                      <button class="btn-ghost btn-sm" (click)="cancelAdd()">Cancel</button>
+                      <span class="fb-char-count" [class.warn]="newComment.length > 800">
+                        {{newComment.length}} / 1000
+                      </span>
+                    </div>
+                  </div>
+                }
+                <!-- Submit error -->
+                @if (submitError && activeAddCat === cat) {
+                  <div class="fb-submit-error">
+                    {{submitError}}
+                  </div>
+                }
+                <!-- Add trigger button -->
+                @if (activeAddCat !== cat) {
+                  <button class="fb-add-trigger"
+                    (click)="startAdd(cat)">
+                    ＋ Add feedback
+                  </button>
+                }
+              </div>
+            }
           </div>
-
-          <!-- Submit error -->
-          <div class="fb-submit-error" *ngIf="submitError && activeAddCat === cat">
-            {{submitError}}
-          </div>
-
-          <!-- Add trigger button -->
-          <button class="fb-add-trigger"
-                  *ngIf="activeAddCat !== cat"
-                  (click)="startAdd(cat)">
-            ＋ Add feedback
-          </button>
-
-        </div>
+        }
       </div>
-    </div>
+    }
 
   </div>
 </div>
-  `
+`
 })
 export class FeedbackPanelComponent implements OnChanges {
   @Input() page = 'Home';

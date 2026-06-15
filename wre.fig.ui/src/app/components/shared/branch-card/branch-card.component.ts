@@ -1,40 +1,53 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
-import { CommonModule }    from '@angular/common';
+import { DatePipe }        from '@angular/common';
 import { BranchSummaryDto } from '../../../models/branch.model';
 import { FillBarComponent } from '../fill-bar/fill-bar.component';
 
 @Component({
   selector:   'app-branch-card',
   standalone: true,
-  imports:    [CommonModule, FillBarComponent],
+  imports:    [DatePipe, FillBarComponent],
   template: `
 <div class="branch-card"
-     [class.pinned]="isPinned"
-     [class.has-notes]="hasUnviewedNotes"
-     [class.status-red]="summary.status === 'red'"
-     (click)="cardClick.emit()">
+  [class.pinned]="isPinned"
+  [class.has-notes]="hasUnviewedNotes"
+  [class.status-red]="summary.status === 'red'"
+  (click)="cardClick.emit()">
   <div class="branch-card-actions">
     <button class="pin-btn" [class.pinned]="isPinned"
-            (click)="$event.stopPropagation(); togglePin.emit(summary.branchId)"
-            title="Pin branch">★</button>
-    <span *ngIf="hasUnviewedNotes" class="bell-icon active" title="Has unviewed notes">🔔</span>
+      (click)="$event.stopPropagation(); togglePin.emit(summary.branchId)"
+    title="Pin branch">★</button>
+    @if (hasUnviewedNotes) {
+      <span class="bell-icon active" title="Has unviewed notes">🔔</span>
+    }
   </div>
-  <div class="branch-card-name">{{summary.branchName}}</div>
-  <div class="branch-card-drivers" *ngIf="!summary.isAcquisition && summary.driverCount">
-    {{summary.driverCount}} driver{{summary.driverCount === 1 ? '' : 's'}}
-  </div>
-  <ng-container *ngIf="!summary.isAcquisition">
+  <div class="branch-card-name">{{summary.state}} — {{summary.branchName}}</div>
+  @if (!summary.isAcquisition && summary.driverCount) {
+    <div class="branch-card-drivers">
+      {{summary.driverCount}} driver{{summary.driverCount === 1 ? '' : 's'}}
+    </div>
+  }
+  @if (!summary.isAcquisition) {
+    <div class="branch-card-updated" [class.stale]="isStale">
+      @if (summary.lastUpdated) {
+        Updated {{summary.lastUpdated | date:'MMM d'}}
+      } @else {
+        Never updated
+      }
+    </div>
+  }
+  @if (!summary.isAcquisition) {
     <app-fill-bar [pct]="summary.fillRate"></app-fill-bar>
-  </ng-container>
-  <ng-container *ngIf="summary.isAcquisition">
+  }
+  @if (summary.isAcquisition) {
     <div class="branch-card-acq-label">acquisition</div>
     <div class="branch-card-acq-sub">Under construction</div>
-  </ng-container>
+  }
   <div style="margin-top:.4rem;">
-    <span class="status-pill" [ngClass]="summary.status">{{statusLabel}}</span>
+    <span class="status-pill" [class]="summary.status">{{statusLabel}}</span>
   </div>
 </div>
-  `
+`
 })
 export class BranchCardComponent {
   @Input() summary!: BranchSummaryDto;
@@ -50,5 +63,12 @@ export class BranchCardComponent {
       red:   'Needs attention'
     };
     return map[this.summary?.status] ?? this.summary?.status ?? '';
+  }
+
+  /** True when the FIG hasn't been updated in 7+ days (feedback #1). */
+  get isStale(): boolean {
+    if (!this.summary?.lastUpdated) return true;
+    const days = (Date.now() - new Date(this.summary.lastUpdated).getTime()) / 86_400_000;
+    return days >= 7;
   }
 }

@@ -27,7 +27,8 @@ export const INSTRUCTION_EDIT_ROLES = [
   ROLES.Dispatcher
 ];
 
-export const REGION_ORDER = ['Mid-Atlantic', 'Mid-South', 'South', 'North'];
+// Client-requested order (June 4 feedback #2): North → Mid-South → Mid-Atlantic → South
+export const REGION_ORDER = ['North', 'Mid-South', 'Mid-Atlantic', 'South'];
 
 export const STATUS_CODES = ['WA', 'WP', 'O', 'CO', 'OC', 'TR', 'HD', 'WX'] as const;
 

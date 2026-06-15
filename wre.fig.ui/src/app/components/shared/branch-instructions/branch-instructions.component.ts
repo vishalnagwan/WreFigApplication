@@ -2,7 +2,7 @@ import {
   Component, Input, Output, EventEmitter,
   OnInit, OnDestroy, inject
 } from '@angular/core';
-import { CommonModule }        from '@angular/common';
+
 import { Subscription }        from 'rxjs';
 import { InstructionService }  from '../../../services/instruction.service';
 import { SignalrService }      from '../../../services/signalr.service';
@@ -11,47 +11,63 @@ import { BranchInstructionsDto, SectionDto } from '../../../models/instruction.m
 @Component({
   selector:   'app-branch-instructions',
   standalone: true,
-  imports:    [CommonModule],
+  imports: [],
   template: `
 <div>
-  <div class="instr-live-banner" *ngIf="showLiveBanner">
-    🔄 Instructions updated live — page refreshed automatically.
-  </div>
-  <div class="instr-bar" *ngIf="vm">
-    <span *ngIf="sortedSections.length === 0" class="instr-empty">
-      No instructions added yet.
-    </span>
-    <span *ngFor="let sec of sortedSections" class="instr-chip"
+  @if (showLiveBanner) {
+    <div class="instr-live-banner">
+      🔄 Instructions updated live — page refreshed automatically.
+    </div>
+  }
+  @if (vm) {
+    <div class="instr-bar">
+      @if (sortedSections.length === 0) {
+        <span class="instr-empty">
+          No instructions added yet.
+        </span>
+      }
+      @for (sec of sortedSections; track sec) {
+        <span class="instr-chip"
           [class.active]="activeKey === sec.key"
           [class.has-urgent]="hasHighlight(sec)"
           (click)="togglePopover(sec.key)">
-      {{sec.shortTitle}}
-      <span class="instr-badge" [class.urgent]="hasHighlight(sec)">{{sec.lines.length}}</span>
-    </span>
-    <button class="btn-ghost btn-sm" *ngIf="canEdit" (click)="editRequested.emit()" style="margin-left:auto;">
-      ✏ Edit
-    </button>
-  </div>
+          {{sec.shortTitle}}
+          <span class="instr-badge" [class.urgent]="hasHighlight(sec)">{{sec.lines.length}}</span>
+        </span>
+      }
+      @if (canEdit) {
+        <button class="btn-ghost btn-sm" (click)="editRequested.emit()" style="margin-left:auto;">
+          ✏ Edit
+        </button>
+      }
+    </div>
+  }
 
   <!-- Popover for active section -->
-  <div class="instr-popover" *ngIf="activeSection">
-    <div class="instr-popover-hdr">
-      {{activeSection.title}}
-      <button class="btn-icon" style="color:#fff;font-size:.8rem;" (click)="activeKey = null">✕</button>
-    </div>
-    <div class="instr-popover-body">
-      <div *ngFor="let line of activeSection.lines"
-           class="instr-line"
-           [class.highlighted]="line.isHighlighted">
-        {{line.content}}
+  @if (activeSection) {
+    <div class="instr-popover">
+      <div class="instr-popover-hdr">
+        {{activeSection.title}}
+        <button class="btn-icon" style="color:#fff;font-size:.8rem;" (click)="activeKey = null">✕</button>
       </div>
-      <div *ngIf="activeSection.lines.length === 0" style="color:var(--ink-faint);font-size:.8rem;">
-        No entries yet.
+      <div class="instr-popover-body">
+        @for (line of activeSection.lines; track line) {
+          <div
+            class="instr-line"
+            [class.highlighted]="line.isHighlighted">
+            {{line.content}}
+          </div>
+        }
+        @if (activeSection.lines.length === 0) {
+          <div style="color:var(--ink-faint);font-size:.8rem;">
+            No entries yet.
+          </div>
+        }
       </div>
     </div>
-  </div>
+  }
 </div>
-  `
+`
 })
 export class BranchInstructionsComponent implements OnInit, OnDestroy {
   @Input() branchId!: number;
