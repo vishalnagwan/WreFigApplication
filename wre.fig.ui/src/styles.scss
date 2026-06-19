@@ -555,6 +555,13 @@ button:disabled { opacity: .45; cursor: not-allowed; }
   z-index: 10;
 }
 .emp-col      { width: 100px; padding-left: .5rem !important; text-align: left !important; }
+// Clickable technician name → opens the permanent profile card.
+.emp-name-link {
+  background: none; border: 0; padding: 0; margin: 0;
+  font: inherit; color: inherit; font-weight: 600;
+  cursor: pointer; text-align: left;
+}
+.emp-name-link:hover { color: var(--accent, #2563eb); text-decoration: underline; }
 .jobtitle-col { width: 90px;  padding-left: .5rem !important; text-align: left !important; }
 .resource-col { width: 90px;  padding-left: .5rem !important; text-align: left !important; }
 .manager-col  { width: 85px;  padding-left: .5rem !important; text-align: left !important; }

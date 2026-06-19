@@ -14,6 +14,7 @@ import { InstructionService }             from '../../../services/instruction.se
 import { FillBarComponent }               from '../../shared/fill-bar/fill-bar.component';
 import { ShiftChipComponent }             from '../../shared/shift-chip/shift-chip.component';
 import { DayDetailPanelComponent }        from '../../shared/day-detail-panel/day-detail-panel.component';
+import { TechnicianProfileCardComponent, TechnicianProfile } from '../../shared/technician-profile-card/technician-profile-card.component';
 import { BranchInstructionsComponent }    from '../../shared/branch-instructions/branch-instructions.component';
 import { BranchInstructionEditorComponent } from '../../shared/branch-instruction-editor/branch-instruction-editor.component';
 import { ROLES }                          from '../../../constant';
@@ -28,7 +29,7 @@ const NOTE_ROLES  = [ROLES.Admin, ROLES.FieldSupervisor, ROLES.DispatchSuperviso
   imports: [
     CommonModule, TitleCasePipe, FormsModule, RouterModule,
     FillBarComponent, ShiftChipComponent,
-    DayDetailPanelComponent, BranchInstructionsComponent,
+    DayDetailPanelComponent, TechnicianProfileCardComponent, BranchInstructionsComponent,
     BranchInstructionEditorComponent
   ],
   template: `
@@ -230,7 +231,10 @@ const NOTE_ROLES  = [ROLES.Admin, ROLES.FieldSupervisor, ROLES.DispatchSuperviso
                   (change)="toggleRowSelect(row.employeeId)" />
               </td>
             }
-            <td class="emp-col" style="padding-left:.5rem;font-size:.8rem;font-weight:600;">{{row.name}}</td>
+            <td class="emp-col" style="padding-left:.5rem;font-size:.8rem;font-weight:600;">
+              <button type="button" class="emp-name-link" (click)="openProfile(row)"
+                title="View technician profile">{{row.name}}</button>
+            </td>
             <td class="shift-col">
               <span class="shift-badge"
                 [class.am]="row.defaultShift.toUpperCase() === 'AM'"
@@ -312,6 +316,14 @@ const NOTE_ROLES  = [ROLES.Admin, ROLES.FieldSupervisor, ROLES.DispatchSuperviso
   </app-day-detail-panel>
 }
 
+<!-- Technician profile card (permanent profile — opened from the name) -->
+@if (profileCard) {
+  <app-technician-profile-card
+    [profile]="profileCard"
+    (close)="closeProfile()">
+  </app-technician-profile-card>
+}
+
 <!-- Instruction editor -->
 @if (instructionEditorOpen && instructions) {
   <app-branch-instruction-editor
@@ -349,6 +361,7 @@ export class ScheduleComponent implements OnInit, OnDestroy {
   detailRow:    EmployeeScheduleRowDto | null = null;
   detailDay:    number | null = null;
   detailCell:   DayCellDto | null = null;
+  profileCard:  TechnicianProfile | null = null;
 
   leadershipExpanded    = false;
   instructionEditorOpen = false;
@@ -635,6 +648,7 @@ export class ScheduleComponent implements OnInit, OnDestroy {
         setTimeout(() => this.justPainted.delete(key), 700);
       }
     } else {
+      this.profileCard = null;
       this.detailRow  = row;
       this.detailDay  = day;
       this.detailCell = cell ?? null;
@@ -646,6 +660,28 @@ export class ScheduleComponent implements OnInit, OnDestroy {
     this.detailRow  = null;
     this.detailDay  = null;
     this.detailCell = null;
+  }
+
+  // Permanent profile card — opened by clicking a technician's name.
+  // Mutually exclusive with the day-detail notes panel.
+  openProfile(row: EmployeeScheduleRowDto): void {
+    this.closeDetailPanel();
+    this.profileCard = {
+      name:            row.name,
+      jobTitle:        row.jobTitle,
+      branchName:      this.summary?.branchName ?? '',
+      defaultShift:    row.defaultShift,
+      truckAssignment: row.truckAssignment,
+      truckId:         row.truckId,
+      resourceTypes:   (row.resourceCategory ?? '').split(',').map(s => s.trim()).filter(Boolean),
+      managerName:     row.managerName,
+      workPhone:       row.workPhone,
+      workMobilePhone: row.workMobilePhone,
+    };
+  }
+
+  closeProfile(): void {
+    this.profileCard = null;
   }
 
   onNoteSaved(hasNote: boolean): void {

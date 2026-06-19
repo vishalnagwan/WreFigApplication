@@ -379,8 +379,12 @@ export class UsersComponent implements OnInit {
         resourceTypeNames: []
       };
       this.userSvc.createUser(dto).subscribe({
-        next: () => { this.saving = false; this.showModal = false; this.loadUsers(); },
-        error: (err) => { this.saving = false; this.modalError = err?.error?.error ?? 'Save failed. Please try again.'; }
+        next: (res) => {
+          this.saving = false;
+          if (res.success) { this.showModal = false; this.loadUsers(); }
+          else { this.modalError = res.message ?? 'Save failed. Please try again.'; }
+        },
+        error: () => { this.saving = false; this.modalError = 'Save failed. Please try again.'; }
       });
     } else {
       const dto: EditUserDto = {
@@ -393,8 +397,12 @@ export class UsersComponent implements OnInit {
         isActive:          this.form.isActive
       };
       this.userSvc.updateUser(this.selectedUser!.id, dto).subscribe({
-        next: () => { this.saving = false; this.showModal = false; this.loadUsers(); },
-        error: (err) => { this.saving = false; this.modalError = err?.error?.error ?? 'Save failed. Please try again.'; }
+        next: (res) => {
+          this.saving = false;
+          if (res.success) { this.showModal = false; this.loadUsers(); }
+          else { this.modalError = res.message ?? 'Save failed. Please try again.'; }
+        },
+        error: () => { this.saving = false; this.modalError = 'Save failed. Please try again.'; }
       });
     }
   }
@@ -403,7 +411,7 @@ export class UsersComponent implements OnInit {
     if (!confirm(`Deactivate ${u.fullName}?`)) return;
     this.saving = true;
     this.userSvc.deactivateUser(u.id).subscribe({
-      next: () => { this.saving = false; this.loadUsers(); },
+      next: () => { this.saving = false; this.loadUsers(); },   // envelope: reload reflects the change
       error: () => { this.saving = false; }
     });
   }

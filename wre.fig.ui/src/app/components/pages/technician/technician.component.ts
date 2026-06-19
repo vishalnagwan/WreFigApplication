@@ -3,6 +3,7 @@ import { Component, OnInit, inject } from '@angular/core';
 import { FormsModule }               from '@angular/forms';
 import { EmployeeService }           from '../../../services/employee.service';
 import { BranchService }             from '../../../services/branch.service';
+import { TechnicianProfileCardComponent, TechnicianProfile } from '../../shared/technician-profile-card/technician-profile-card.component';
 import { EmployeeListDto, CreateEmployeeDto, EditEmployeeDto } from '../../../models/employee.model';
 import { BranchListItem }            from '../../../models/branch.model';
 import { RESOURCE_TYPES }            from '../../../constant';
@@ -13,7 +14,7 @@ type ModalMode = 'create' | 'edit';
 @Component({
   selector:   'app-technician',
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, TechnicianProfileCardComponent],
   template: `
 <div class="page-header">
   <h1>Technician Management</h1>
@@ -52,7 +53,8 @@ type ModalMode = 'create' | 'edit';
       @for (e of pagedRows; track e) {
         <tr>
           <td>
-            <div style="font-weight:600;">{{e.name}}</div>
+            <button type="button" class="emp-name-link" (click)="openProfile(e)"
+              title="View technician profile" style="font-weight:600;">{{e.name}}</button>
             @if (e.jobTitle) {
               <div style="font-size:.75rem;color:var(--ink-light);">{{e.jobTitle}}</div>
             }
@@ -117,7 +119,7 @@ type ModalMode = 'create' | 'edit';
 
 <!-- Modal -->
 @if (showModal) {
-  <div class="modal-overlay" (click)="onOverlayClick($event)">
+  <div class="modal-overlay" (mousedown)="onOverlayMouseDown($event)" (click)="onOverlayClick($event)">
     <div class="modal-card modal-wide" (click)="$event.stopPropagation()">
       <div class="modal-header">
         {{modalMode === 'create' ? 'New Technician' : 'Edit Technician'}}
@@ -182,11 +184,13 @@ type ModalMode = 'create' | 'edit';
         <div class="form-row-2">
           <div class="field">
             <label>Work Phone</label>
-            <input type="text" [(ngModel)]="form.workPhone" placeholder="(555) 555-0100" />
+            <input type="text" [(ngModel)]="form.workPhone" placeholder="(555) 555-0100"
+              (blur)="form.workPhone = formatPhone(form.workPhone)" />
           </div>
           <div class="field">
             <label>Mobile Phone</label>
-            <input type="text" [(ngModel)]="form.workMobilePhone" placeholder="(555) 555-0100" />
+            <input type="text" [(ngModel)]="form.workMobilePhone" placeholder="(555) 555-0100"
+              (blur)="form.workMobilePhone = formatPhone(form.workMobilePhone)" />
           </div>
         </div>
         <!-- Resource Types -->
@@ -233,6 +237,14 @@ type ModalMode = 'create' | 'edit';
       </div>
     </div>
   </div>
+}
+
+<!-- Technician profile card (opened by clicking a name) -->
+@if (profileCard) {
+  <app-technician-profile-card
+    [profile]="profileCard"
+    (close)="closeProfile()">
+  </app-technician-profile-card>
 }
 `,
   styles: [`
@@ -428,7 +440,11 @@ export class TechnicianComponent implements OnInit {
         branchId:        this.form.branchId,
       };
       this.empSvc.createEmployee(dto).subscribe({
-        next: () => { this.saving = false; this.showModal = false; this.loadEmployees(); },
+        next: res => {
+          this.saving = false;
+          if (res.success) { this.showModal = false; this.loadEmployees(); }
+          else this.modalError = res.message ?? 'Save failed. Please try again.';
+        },
         error: () => { this.saving = false; this.modalError = 'Save failed. Please try again.'; }
       });
     } else {
@@ -447,7 +463,11 @@ export class TechnicianComponent implements OnInit {
         isActive:        this.form.isActive,
       };
       this.empSvc.updateEmployee(this.selectedEmp!.id, dto).subscribe({
-        next: () => { this.saving = false; this.showModal = false; this.loadEmployees(); },
+        next: res => {
+          this.saving = false;
+          if (res.success) { this.showModal = false; this.loadEmployees(); }
+          else this.modalError = res.message ?? 'Save failed. Please try again.';
+        },
         error: () => { this.saving = false; this.modalError = 'Save failed. Please try again.'; }
       });
     }
@@ -462,8 +482,52 @@ export class TechnicianComponent implements OnInit {
     });
   }
 
+  // Permanent profile card (baseball card) — opened by clicking a name.
+  profileCard: TechnicianProfile | null = null;
+
+  openProfile(e: EmployeeListDto): void {
+    this.profileCard = {
+      name:            e.name,
+      jobTitle:        e.jobTitle,
+      branchName:      e.branchName,
+      defaultShift:    e.defaultShift,
+      truckAssignment: e.truckAssignment,
+      truckId:         e.truckId,
+      resourceTypes:   e.resourceTypes ?? [],
+      managerName:     e.managerName,
+      workPhone:       e.workPhone,
+      workMobilePhone: e.workMobilePhone,
+      email:           e.email,
+    };
+  }
+
+  closeProfile(): void {
+    this.profileCard = null;
+  }
+
+  // Track where the mouse press started so a text-selection drag that begins
+  // inside an input but releases over the backdrop does NOT close the modal.
+  private overlayMouseDownTarget: EventTarget | null = null;
+
+  onOverlayMouseDown(event: MouseEvent): void {
+    this.overlayMouseDownTarget = event.target;
+  }
+
+  // Normalise a US 10-digit number to (xxx) xxx-xxxx; leave anything else untouched.
+  formatPhone(value: string | null): string | null {
+    if (!value) return value;
+    const d = value.replace(/\D/g, '');
+    if (d.length === 10)                      return `(${d.slice(0, 3)}) ${d.slice(3, 6)}-${d.slice(6)}`;
+    if (d.length === 11 && d.startsWith('1')) return `(${d.slice(1, 4)}) ${d.slice(4, 7)}-${d.slice(7)}`;
+    return value;
+  }
+
   onOverlayClick(event: MouseEvent): void {
-    if ((event.target as HTMLElement).classList.contains('modal-overlay')) this.closeModal();
+    const isOverlay = (el: EventTarget | null) =>
+      el instanceof HTMLElement && el.classList.contains('modal-overlay');
+    // Close only on a genuine backdrop click — both press and release on the overlay.
+    if (isOverlay(event.target) && isOverlay(this.overlayMouseDownTarget)) this.closeModal();
+    this.overlayMouseDownTarget = null;
   }
 
   private loadEmployees(): void {

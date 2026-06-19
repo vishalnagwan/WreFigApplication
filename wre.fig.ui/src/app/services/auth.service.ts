@@ -1,8 +1,10 @@
 import { Injectable, signal, Optional }            from '@angular/core';
 import { HttpClient }                               from '@angular/common/http';
 import { Router }                                   from '@angular/router';
-import { Observable, tap }                          from 'rxjs';
+import { Observable, tap, throwError }              from 'rxjs';
+import { switchMap }                                from 'rxjs/operators';
 import { environment }                              from '../../environments/environment';
+import { ApiResponse }                              from '../models/api-response.model';
 import { AuthUser, LoginRequest, LoginResponse }    from '../models/auth.model';
 import { MsalService }                              from '@azure/msal-angular';
 
@@ -21,22 +23,32 @@ export class AuthService {
     @Optional() private msal?: MsalService,
   ) {}
 
-  // ── Form-based login (existing, unchanged) ────────────────────────
+  // ── Form-based login (existing) ───────────────────────────────────
   login(dto: LoginRequest): Observable<LoginResponse> {
-    return this.http.post<LoginResponse>(
+    return this.http.post<ApiResponse<LoginResponse>>(
       `${environment.apiUrl}/auth/login`, dto
     ).pipe(
-      tap(res => this.persistSession(res))
+      switchMap(res =>
+        res.success && res.data
+          ? [res.data]
+          : throwError(() => new Error(res.message ?? 'Invalid email or password.'))
+      ),
+      tap(data => this.persistSession(data))
     );
   }
 
   // ── MSAL: exchange Azure token for FIG JWT ────────────────────────
   loginWithMicrosoft(azureToken: string): Observable<LoginResponse> {
-    return this.http.post<LoginResponse>(
+    return this.http.post<ApiResponse<LoginResponse>>(
       `${environment.apiUrl}/auth/microsoft`,
       { accessToken: azureToken }
     ).pipe(
-      tap(res => this.persistSession(res))
+      switchMap(res =>
+        res.success && res.data
+          ? [res.data]
+          : throwError(() => new Error(res.message ?? 'Microsoft login failed.'))
+      ),
+      tap(data => this.persistSession(data))
     );
   }
 
