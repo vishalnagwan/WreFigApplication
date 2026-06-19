@@ -73,8 +73,13 @@ import { ShiftChipComponent }    from '../shift-chip/shift-chip.component';
               @if (row.workPhone) {
                 <a class="dialpad-btn"
                   href="https://dial.pad.com" target="_blank" rel="noopener"
-                  title="Open in Dialpad">
+                  title="Call via Dialpad">
                   📞 DialPad
+                </a>
+                <a class="dialpad-btn dialtext-btn"
+                  [href]="'sms:' + digitsOnly(row.workPhone)"
+                  title="Text via Dialpad">
+                  💬 DialText
                 </a>
               }
             </div>
@@ -83,11 +88,16 @@ import { ShiftChipComponent }    from '../shift-chip/shift-chip.component';
             <div class="info-label">Mobile</div>
             <div style="display:flex;align-items:center;gap:.4rem;flex-wrap:wrap;">
               <span>{{row.workMobilePhone || '—'}}</span>
-              @if (row.workMobilePhone && !row.workPhone) {
+              @if (row.workMobilePhone) {
                 <a class="dialpad-btn"
                   href="https://dial.pad.com" target="_blank" rel="noopener"
-                  title="Open in Dialpad">
+                  title="Call via Dialpad">
                   📞 DialPad
+                </a>
+                <a class="dialpad-btn dialtext-btn"
+                  [href]="'sms:' + digitsOnly(row.workMobilePhone)"
+                  title="Text via Dialpad">
+                  💬 DialText
                 </a>
               }
             </div>
@@ -197,6 +207,11 @@ export class DayDetailPanelComponent implements OnInit {
     if (!value) return '—';
     // Uppercase trailing 'g' used as gallon unit (e.g. "4,800g" → "4,800G")
     return value.replace(/g$/i, 'G');
+  }
+
+  // Strip formatting so the sms:/tel: target is just digits.
+  digitsOnly(value: string | undefined | null): string {
+    return (value ?? '').replace(/\D/g, '');
   }
 
   get resourceTypeDisplay(): string {

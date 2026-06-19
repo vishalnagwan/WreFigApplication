@@ -102,11 +102,27 @@ export interface TechnicianProfile {
           }
           <div class="info-item">
             <div class="info-label">Work Phone</div>
-            <div>{{formatPhone(profile.workPhone)}}</div>
+            <div style="display:flex;align-items:center;gap:.4rem;flex-wrap:wrap;">
+              <span>{{formatPhone(profile.workPhone)}}</span>
+              @if (profile.workPhone) {
+                <a class="dialpad-btn" href="https://dial.pad.com" target="_blank" rel="noopener"
+                  title="Call via Dialpad">📞 DialPad</a>
+                <a class="dialpad-btn dialtext-btn" [href]="'sms:' + digitsOnly(profile.workPhone)"
+                  title="Text via Dialpad">💬 DialText</a>
+              }
+            </div>
           </div>
           <div class="info-item">
             <div class="info-label">Mobile Phone</div>
-            <div>{{formatPhone(profile.workMobilePhone)}}</div>
+            <div style="display:flex;align-items:center;gap:.4rem;flex-wrap:wrap;">
+              <span>{{formatPhone(profile.workMobilePhone)}}</span>
+              @if (profile.workMobilePhone) {
+                <a class="dialpad-btn" href="https://dial.pad.com" target="_blank" rel="noopener"
+                  title="Call via Dialpad">📞 DialPad</a>
+                <a class="dialpad-btn dialtext-btn" [href]="'sms:' + digitsOnly(profile.workMobilePhone)"
+                  title="Text via Dialpad">💬 DialText</a>
+              }
+            </div>
           </div>
         </div>
       </div>
@@ -147,5 +163,10 @@ export class TechnicianProfileCardComponent {
     if (d.length === 10)                      return `(${d.slice(0, 3)}) ${d.slice(3, 6)}-${d.slice(6)}`;
     if (d.length === 11 && d.startsWith('1')) return `(${d.slice(1, 4)}) ${d.slice(4, 7)}-${d.slice(7)}`;
     return p; // non-standard input left untouched
+  }
+
+  // Strip formatting so the sms: target is just digits.
+  digitsOnly(p: string | null): string {
+    return (p ?? '').replace(/\D/g, '');
   }
 }

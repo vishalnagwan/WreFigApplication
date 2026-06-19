@@ -761,6 +761,13 @@ button:disabled { opacity: .45; cursor: not-allowed; }
   white-space: nowrap;
 }
 .dialpad-btn:hover { background: #e0e0ff; }
+// DialText — same chip, green "messaging" accent to distinguish from the call button.
+.dialtext-btn {
+  background: #e8f7ee;
+  border-color: #b6e3c6;
+  color: #0f9d58;
+}
+.dialtext-btn:hover { background: #d7f0e0; }
 .detail-section { margin-bottom: 1.25rem; }
 .detail-section-title {
   font-size: .7rem;
