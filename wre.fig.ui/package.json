@@ -3,10 +3,12 @@
   "version": "1.0.0",
   "scripts": {
     "ng": "ng",
-    "start": "ng serve",
-    "build": "ng build",
-    "build-prod": "ng build --prod",
-    "watch": "ng build --watch --configuration development",
+    "version:stamp": "node scripts/generate-version.js",
+    "postinstall": "node scripts/generate-version.js",
+    "start": "npm run version:stamp && ng serve",
+    "build": "npm run version:stamp && ng build",
+    "build-prod": "npm run version:stamp && ng build --prod",
+    "watch": "npm run version:stamp && ng build --watch --configuration development",
     "test": "ng test"
   },
   "private": true,

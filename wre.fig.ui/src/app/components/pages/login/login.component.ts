@@ -5,6 +5,7 @@ import { Router, ActivatedRoute }     from '@angular/router';
 import { AuthService }                from '../../../services/auth.service';
 import { MsalService }                from '@azure/msal-angular';
 import { environment }                from '../../../../environments/environment';
+import { VERSION }                    from '../../../../environments/version';
 
 @Component({
   selector:   'app-login',
@@ -75,6 +76,10 @@ import { environment }                from '../../../../environments/environment
       </button>
     }
 
+    <div class="login-version" title="Build {{version.commit}} · {{version.buildDate}}">
+      v{{version.version}}
+    </div>
+
   </div>
 </div>
 `
@@ -89,9 +94,12 @@ export class LoginComponent {
   msalLoading = false;
   error       = '';
 
-  // ── Mode flags 
+  // ── Mode flags
   readonly msalMode     = environment.useMsalAuth;
   readonly showFormAuth = !environment.useMsalAuth || !environment.production;
+
+  // Release version shown in the footer (auto-stamped at build time).
+  readonly version = VERSION;
 
   constructor(
     private auth:              AuthService,

@@ -134,12 +134,15 @@ export class ComplianceComponent implements OnInit {
   }
 
   get regionGroups(): RegionGroup[] {
-    const rows = this.compliance?.rows ?? [];
+    // Only real branch rows — guards against phantom rows that would otherwise
+    // render as an empty, nameless region block.
+    const rows = (this.compliance?.rows ?? [])
+      .filter(r => r.branchId > 0 && !!r.branchName?.trim());
 
     // Build a map: regionName → sorted rows (by fillRate ascending)
     const map = new Map<string, BranchComplianceRowDto[]>();
     for (const row of rows) {
-      const region = row.regionName || 'Other';
+      const region = row.regionName?.trim() || 'Other';
       if (!map.has(region)) map.set(region, []);
       map.get(region)!.push(row);
     }
@@ -162,7 +165,8 @@ export class ComplianceComponent implements OnInit {
       groups.push({ name, rows: regionRows });
     }
 
-    return groups;
+    // Final guard: never render a region that has no branches.
+    return groups.filter(g => g.rows.length > 0);
   }
 
   statusLabel(status: string): string {

@@ -1143,6 +1143,14 @@ button:disabled { opacity: .45; cursor: not-allowed; }
 }
 .login-logo { text-align: left; margin-bottom: 1.25rem; }
 .login-logo-img { max-width: 220px; height: auto; display: inline-block; }
+// Auto-stamped release version (footer of the login card).
+.login-version {
+  margin-top: 1.5rem;
+  text-align: center;
+  font-size: .72rem;
+  color: var(--ink-faint);
+  letter-spacing: .3px;
+}
 .login-heading {
   font-size: 1.35rem;
   font-weight: 700;
