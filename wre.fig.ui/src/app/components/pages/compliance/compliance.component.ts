@@ -46,7 +46,7 @@ interface RegionGroup {
     </div>
   </div>
   <!-- Regions -->
-  @for (region of regionGroups; track region) {
+  @for (region of regionGroups; track region.name) {
     <div class="region-group">
       <!-- Region header -->
       <div class="region-header">
@@ -65,7 +65,7 @@ interface RegionGroup {
           </tr>
         </thead>
         <tbody>
-          @for (row of region.rows; track row) {
+          @for (row of region.rows; track row.branchId) {
             <tr
               [routerLink]="['/schedule', row.branchId]"
               [queryParams]="{year: year, month: month}"
@@ -133,7 +133,12 @@ export class ComplianceComponent implements OnInit {
     return `${months[this.month - 1]} ${this.year}`;
   }
 
-  get regionGroups(): RegionGroup[] {
+  // Computed once when data loads (NOT a getter) — a getter rebuilds a new array
+  // every change-detection cycle, which with track-by churn left orphaned empty
+  // region blocks in the DOM (NG0956 / NG0100).
+  regionGroups: RegionGroup[] = [];
+
+  private buildRegionGroups(): RegionGroup[] {
     // Only real branch rows — guards against phantom rows that would otherwise
     // render as an empty, nameless region block.
     const rows = (this.compliance?.rows ?? [])
@@ -196,8 +201,12 @@ export class ComplianceComponent implements OnInit {
   private load(): void {
     this.loading = true;
     this.branchSvc.getCompliance(this.year, this.month).subscribe({
-      next: data => { this.compliance = data; this.loading = false; },
-      error: () => { this.loading = false; }
+      next: data => {
+        this.compliance   = data;
+        this.regionGroups = this.buildRegionGroups();
+        this.loading      = false;
+      },
+      error: () => { this.compliance = null; this.regionGroups = []; this.loading = false; }
     });
   }
 }
